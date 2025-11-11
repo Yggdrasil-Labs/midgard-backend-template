@@ -1,0 +1,37 @@
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+bin/
+doc/
+.DS_Store
+
+### Logs ###
+/logs/
+
+### VS Code ###
+.vscode/
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
