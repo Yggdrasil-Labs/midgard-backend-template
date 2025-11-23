@@ -1,7 +1,13 @@
+effective-pom
 target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Maven Flatten Plugin
+.flattened-pom.xml
 ### eclipse ###
 .apt_generated
 .classpath
