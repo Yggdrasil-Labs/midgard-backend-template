@@ -6,15 +6,19 @@
     <parent>
         <groupId>com.yggdrasil.labs</groupId>
         <artifactId>mimir-boot-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.2.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>midgard-backend-template-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>midgard-backend-template</artifactId>
+    <version>${revision}</version>
     <packaging>pom</packaging>
     <name>midgard-backend-template</name>
 
     <properties>
+        <!-- 📌 版本号统一管理：只修改这里即可，所有子模块自动继承 -->
+        <!-- 开发阶段使用 SNAPSHOT 版本 -->
+        <revision>1.0.0-SNAPSHOT</revision>
+
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -22,17 +26,16 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.deploy.skip>true</maven.deploy.skip>
 
-        <mimir-boot.version>1.0.0</mimir-boot.version>
+        <mimir-boot.version>1.2.1-SNAPSHOT</mimir-boot.version>
         <cola.components.version>5.0.0</cola.components.version>
-        <mybatis.spring.boot.version>3.0.3</mybatis.spring.boot.version>
     </properties>
 
     <modules>
-        <module>midgard-backend-template-client</module>
-        <module>midgard-backend-template-adapter</module>
-        <module>midgard-backend-template-app</module>
-        <module>midgard-backend-template-domain</module>
-        <module>midgard-backend-template-infrastructure</module>
+        <module>client</module>
+        <module>adapter</module>
+        <module>app</module>
+        <module>domain</module>
+        <module>infrastructure</module>
         <module>start</module>
     </modules>
 
@@ -54,30 +57,38 @@
             <!--Project modules-->
             <dependency>
                 <groupId>com.yggdrasil.labs</groupId>
-                <artifactId>midgard-backend-template-adapter</artifactId>
-                <version>${project.version}</version>
+                <artifactId>adapter</artifactId>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.yggdrasil.labs</groupId>
-                <artifactId>midgard-backend-template-client</artifactId>
-                <version>${project.version}</version>
+                <artifactId>client</artifactId>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.yggdrasil.labs</groupId>
-                <artifactId>midgard-backend-template-app</artifactId>
-                <version>${project.version}</version>
+                <artifactId>app</artifactId>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.yggdrasil.labs</groupId>
-                <artifactId>midgard-backend-template-domain</artifactId>
-                <version>${project.version}</version>
+                <artifactId>domain</artifactId>
+                <version>${revision}</version>
             </dependency>
             <dependency>
                 <groupId>com.yggdrasil.labs</groupId>
-                <artifactId>midgard-backend-template-infrastructure</artifactId>
-                <version>${project.version}</version>
+                <artifactId>infrastructure</artifactId>
+                <version>${revision}</version>
             </dependency>
             <!--Project modules End-->
+
+            <dependency>
+                <groupId>com.yggdrasil.labs</groupId>
+                <artifactId>mimir-boot-bom</artifactId>
+                <version>${mimir-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <dependency>
                 <groupId>com.alibaba.cola</groupId>
@@ -116,4 +127,38 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <!-- Flatten Plugin (版本管理) - 复用 mimir-boot-parent 中的配置 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Profiles 从 mimir-boot-parent 继承 -->
+    <!-- 显式声明以便 IDEA 识别和显示 -->
+    <profiles>
+        <!-- dev profile (默认激活) - 开发环境，快速构建，不检查覆盖率 -->
+        <profile>
+            <id>dev</id>
+        </profile>
+        
+        <!-- precheck profile - 提交前检查：单测与覆盖率 -->
+        <profile>
+            <id>precheck</id>
+        </profile>
+        
+        <!-- ci profile - CI 流水线严格门禁：格式、覆盖率、lint -->
+        <profile>
+            <id>ci</id>
+        </profile>
+        
+        <!-- prod profile - 生产发布：打包、上传仓库 -->
+        <profile>
+            <id>prod</id>
+        </profile>
+    </profiles>
 </project>

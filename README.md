@@ -165,6 +165,35 @@ com.yggdrasil.labs
 - Domain 层：`com.yggdrasil.labs.domain.*` - 核心业务规则
 - Infrastructure 层：`com.yggdrasil.labs.infra.*` - 技术实现
 
+## 模块依赖关系示意图
+
+整体依赖关系遵循“内核稳定、外层依赖内层”的原则，禁止反向依赖和环依赖：
+
+```text
+          ┌───────────────┐
+          │    start      │  启动层：聚合所有业务模块，仅做启动与配置
+          └──────┬────────┘
+                 │ 依赖
+        ┌────────┼───────────────────────────┐
+        │        │                           │
+        ▼        ▼                           ▼
+   ┌────────┐ ┌────────┐               ┌──────────────┐
+   │adapter │ │  app   │               │infrastructure│
+   └───┬────┘ └────┬───┘               └──────┬───────┘
+       │ 依赖      │ 依赖                       │ 依赖
+       ▼           ▼                            ▼
+   ┌────────┐  ┌────────┐                 ┌────────┐
+   │ client │  │ domain │ ◀────────────── │  infra │
+   └────────┘  └────────┘   只依赖 COLA 组件      （同一模块内的包结构）
+```
+
+- **client**：对外契约层，**不依赖任何业务实现模块**（app / domain / infra / adapter）。
+- **domain**：领域层，**不依赖 client / app / infra / adapter**，仅依赖 COLA 领域组件。
+- **app**：应用服务层，依赖 `client`（用例契约）和 `domain`（领域模型与仓储接口），**不依赖 infrastructure 实现**。
+- **infrastructure**：基础设施层，依赖 `domain`，实现仓储等技术细节，**不被上层直接依赖为业务入口**。
+- **adapter**：适配层，只依赖 `client`，使用其中的 API/Command/Query/DTO 作为入参和出参。
+- **start**：启动层，显式依赖 `adapter`、`app`、`domain`、`infrastructure`，负责聚合模块与装配 Bean，但**不写业务逻辑**。
+
 ## 对象转换规范
 
 项目遵循以下对象转换规范，确保各层职责清晰：
@@ -183,6 +212,29 @@ com.yggdrasil.labs
 ### 转换工具
 - **App 层**: 使用 Assembler（手动转换或 MapStruct）
 - **Infrastructure 层**: 使用 MapStruct 进行 Domain Entity ↔ DO 的转换
+
+## Client 命名规范（COLA 5.0 风格）
+
+client/api:
+  - {Aggregate}CmdService      // 写接口
+  - {Aggregate}QueryService    // 读接口
+
+client/dto/command:
+  - Create{Aggregate}Cmd
+  - Update{Aggregate}Cmd
+  - Delete{Aggregate}Cmd
+  - Add{SubResource}Cmd
+  - Modify{SubResource}Cmd
+
+client/dto/query:
+  - {Aggregate}Query
+  - {Aggregate}ListQuery
+  - {Aggregate}PageQuery
+
+client/dto/response:
+  - {Aggregate}DTO
+  - {Aggregate}ListResponse
+  - {Aggregate}PageResponse
 
 ## 使用方式
 
