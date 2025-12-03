@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.app.customer.executor.query;
+package com.yggdrasil.labs.app.customer.query;
 
 import com.alibaba.cola.dto.MultiResponse;
 import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;

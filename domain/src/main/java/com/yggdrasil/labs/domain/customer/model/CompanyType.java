@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.domain.customer;
+package com.yggdrasil.labs.domain.customer.model;
 
 /**
  * CompanyType
@@ -12,3 +12,5 @@ public enum CompanyType {
   IMPORTANT,
   VIP;
 }
+
+

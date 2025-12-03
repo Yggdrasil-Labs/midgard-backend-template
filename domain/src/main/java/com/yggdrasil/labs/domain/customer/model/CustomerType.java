@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.domain.customer;
+package com.yggdrasil.labs.domain.customer.model;
 
 /**
  * CustomerType
@@ -12,3 +12,5 @@ public enum CustomerType {
   IMPORTANT,
   VIP;
 }
+
+

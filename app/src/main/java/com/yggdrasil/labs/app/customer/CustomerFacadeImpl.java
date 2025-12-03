@@ -4,7 +4,7 @@ import com.alibaba.cola.catchlog.CatchAndLog;
 import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
 import com.yggdrasil.labs.app.customer.executor.CustomerAddCmdExe;
-import com.yggdrasil.labs.app.customer.executor.query.CustomerListByNameQryExe;
+import com.yggdrasil.labs.app.customer.query.CustomerListByNameQryExe;
 import com.yggdrasil.labs.client.api.CustomerFacade;
 import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
 import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;

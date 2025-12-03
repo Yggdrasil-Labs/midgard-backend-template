@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.domain.customer;
+package com.yggdrasil.labs.domain.customer.model;
 
 /**
  * SourceType
@@ -10,3 +10,5 @@ public enum SourceType {
   BIZ_ONE, // From biz one
   BIZ_TWO; // From biz two
 }
+
+

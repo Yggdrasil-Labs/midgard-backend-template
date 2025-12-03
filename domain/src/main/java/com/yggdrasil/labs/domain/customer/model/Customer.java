@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.domain.customer;
+package com.yggdrasil.labs.domain.customer.model;
 
 import com.alibaba.cola.domain.Entity;
 import com.alibaba.cola.exception.BizException;
@@ -34,3 +34,5 @@ public class Customer {
     }
   }
 }
+
+
