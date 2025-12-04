@@ -3,13 +3,13 @@ package com.yggdrasil.labs.client.api;
 import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
 import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
-import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
 import com.yggdrasil.labs.client.dto.co.CustomerCO;
+import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
 
 /**
- * 客户聚合接口：Facade
+ * 客户聚合接口：Client
  */
-public interface CustomerFacade {
+public interface CustomerClient {
 
     /**
      * 创建客户

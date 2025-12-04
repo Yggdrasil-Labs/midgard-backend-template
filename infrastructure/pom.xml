@@ -24,6 +24,23 @@
             <artifactId>hutool-all</artifactId>
         </dependency>
 
+        <!-- DO ↔ Entity 转换：使用 MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+            <version>0.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.yggdrasil.labs</groupId>
             <artifactId>mimir-boot-starter-mybatis</artifactId>

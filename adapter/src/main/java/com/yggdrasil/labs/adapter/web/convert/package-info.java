@@ -15,7 +15,7 @@
  *
  * <ul>
  *   <li>命名格式：{Domain}WebConvertor
- *   <li>示例：CustomerWebConvertor、OrderWebConvertor
+ *   <li>示例：CustomerWebConverter、OrderWebConverter
  *   <li>使用 MapStruct 注解实现转换逻辑
  * </ul>
  *

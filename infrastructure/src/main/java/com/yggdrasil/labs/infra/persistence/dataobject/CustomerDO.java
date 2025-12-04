@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.infra.db.entity;
+package com.yggdrasil.labs.infra.persistence.dataobject;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

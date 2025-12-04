@@ -1,255 +1,285 @@
 # midgard-backend-template
 
-> 中庭 - DDD 架构模板项目
+> 中庭 - 基于 COLA 5.0 的 DDD 架构模板项目
 
 ## 项目简介
 
-Midgard（中庭）是基于 Cola5.0 DDD 架构的微服务模板项目，用于快速创建符合 DDD 最佳实践的后端服务。
-
-**项目定位**：这是一个模板项目，用于快速开始其他具体的业务项目。开发者可以基于此模板快速搭建符合 DDD 架构规范的后端服务。
+Midgard（中庭）是基于 COLA 5.0 DDD 架构的微服务模板项目，用于快速创建符合 DDD 最佳实践的后端服务。
 
 ## 技术栈
 
 - **基础框架**: Spring Boot 3.3.13 + Java 17
-- **架构模式**: Cola5.0 DDD 分层架构
-- **服务注册**: Nacos（推荐使用 Nacos 2.x）
-- **服务间通信**: 
-  - **对外接口**: OpenFeign（HTTP，供 Gateway 调用）
-  - **内部调用**: Dubbo 3.x（RPC，微服务间调用）
-- **数据库**: MySQL 8.4 + MyBatis-Plus
+- **架构模式**: COLA 5.0 DDD 分层架构
+- **服务注册**: Nacos 2.x
+- **服务通信**: OpenFeign（对外）+ Dubbo 3.x（内部）
+- **数据库**: MySQL 8.4 + MyBatis-Plus（使用 @AutoMybatis 自动生成 Mapper）
+- **对象转换**: MapStruct
 - **缓存**: Redis
 - **消息队列**: Kafka / RocketMQ（可选）
-- **接口文档**: Apifox（API 设计工具）
 
-## 架构设计原则
+## 架构设计
 
-### 核心架构原则
+### 分层架构
 
-项目遵循以下核心架构原则，确保各层职责清晰、边界明确：
+```
+┌─────────────────────────────────────────┐
+│  Start（启动层）                         │  ← 启动 + 配置
+├─────────────────────────────────────────┤
+│  Adapter（适配层）                       │  ← 协议适配（HTTP、RPC、MQ）
+├─────────────────────────────────────────┤
+│  Client（客户端层）                      │  ← 对外契约
+├─────────────────────────────────────────┤
+│  App（应用服务层）                       │  ← 业务编排
+├─────────────────────────────────────────┤
+│  Domain（领域层）                        │  ← 业务规则
+├─────────────────────────────────────────┤
+│  Infrastructure（基础设施层）            │  ← 技术实现
+└─────────────────────────────────────────┘
+```
 
-1. **Start 层原则**：Start 层只能做"启动 + 配置"，不写业务逻辑
-   - 仅包含 SpringBoot 启动类和框架配置
-   - 不包含任何业务逻辑代码
+### 核心原则
 
-2. **Adapter 层原则**：Controller、RPC、Feign、MQ 全部在 Adapter 层
-   - 所有 IO 通道的适配都在 Adapter 层
-   - 包括 HTTP、RPC、Feign、MQ、OSS、定时任务等所有外部接口适配
+| 层 | 职责 | 依赖 | 原则 |
+|---|------|------|------|
+| **Client** | 对外契约（API、DTO） | COLA 基础类 | 只定义不实现 |
+| **Adapter** | 协议适配（HTTP→Cmd/Query） | Client | 薄适配层，不含业务逻辑 |
+| **App** | 业务编排（流程控制） | Client + Domain | 不放规则，只做编排 |
+| **Domain** | 业务规则（Entity、Repository 接口） | 无 | 规则中心，不依赖外部框架 |
+| **Infrastructure** | 技术实现（DO、Repository 实现） | Domain | 实现 Domain 接口（依赖倒置） |
+| **Start** | 启动配置 | 所有层 | 只做启动 + 配置 |
 
-3. **Client 层原则**：Client 层只存"契约模型"，不存实现
-   - 仅包含对外契约定义（API 接口、DTO、Command、Query）
-   - 不包含任何实现代码
+### 依赖关系
 
-4. **App 层原则**：App 层不放规则，只做编排
-   - 负责业务流程编排和用例流程控制
-   - 业务规则应在 Domain 层实现
-
-5. **Domain 层原则**：Domain 层才是规则中心
-   - 包含所有业务规则和领域逻辑
-   - 不依赖任何外部框架，纯 Java 对象
-
-6. **Infra 层原则**：Infra 层负责所有底层技术实现
-   - 实现 Domain 层定义的接口
-   - 包含所有技术细节和外部依赖
+```mermaid
+flowchart TD
+    Start[Start 启动层] -->|依赖| Adapter[Adapter 适配层]
+    Start -->|依赖| App[App 应用层]
+    Start -->|依赖| Infrastructure[Infrastructure 基础设施层]
+    
+    Adapter -->|依赖| Client[Client 客户端层]
+    App -->|依赖| Client
+    App -->|依赖| Domain[Domain 领域层]
+    Infrastructure -->|依赖| Domain
+    
+    style Domain fill:#e8f5e9
+    style Client fill:#e8f5e9
+```
 
 ## 项目结构
 
-项目采用 Cola5.0 DDD 分层架构，主要模块包括：
+### 各层子包说明
 
-- **adapter**: 适配层，所有 IO 通道的适配（HTTP、RPC、Feign、MQ 等）
-- **app**: 应用服务层，业务流程编排
-- **domain**: 领域层，核心业务逻辑和领域模型
-- **infrastructure**: 基础设施层，技术实现和外部依赖
-- **client**: 客户端层，对外契约定义（API 接口、DTO、Command、Query）
-- **start**: 启动层，应用启动类和框架配置
+#### Client 层（`client`）
 
-### 包结构规范
+| 子包 | 用途 | 命名规范 |
+|-----|------|---------|
+| `api` | 业务接口 | `{Domain}Client` |
+| `dto/cmd` | 命令对象（写） | `{Verb}{Domain}Cmd` |
+| `dto/query` | 查询对象（读） | `{Verb}{Domain}Query` |
+| `dto/co` | 客户对象（输出） | `{Domain}CO` |
+| `dto/enums` | 枚举、错误码 | `{Name}Enum`、`ErrorCode` |
 
-项目采用统一的包结构规范，每个模块下使用模块名作为包名前缀。详细包结构如下：
+**动词映射表**：
+- Command：`Create`、`Update`、`Modify`、`Add`、`Delete`、`Remove`
+- Query：`Get`、`Query`、`List`、`Page`、`Check`
 
-```
-com.yggdrasil.labs
-│
-├── start                                # 启动层：仅包含启动类 & 框架配置
-│   ├── Application                      # SpringBoot 启动类
-│   ├── config                           # 全局配置（非业务）
-│   │   ├── web                          # WebMvc/CORS/拦截器配置
-│   │   ├── jackson                      # JSON序列化配置
-│   │   ├── swagger                      # API文档配置
-│   │   ├── security                     # SpringSecurity配置
-│   │   ├── exception                    # 全局异常处理
-│   │   ├── validation                   # 全局校验器
-│   │   └── properties                   # @ConfigurationProperties
-│   ├── aspect                           # 全局AOP：日志、鉴权、traceId
-│   └── initializer                      # 应用启动监听器、初始化器
-│
-├── adapter                              # 适配层：所有 IO 通道的适配
-│   ├── web                              # HTTP 接口适配
-│   │   ├── controller                   # REST 控制器（输入适配）
-│   │   ├── filter                       # Servlet Filter
-│   │   ├── interceptor                  # HandlerInterceptor
-│   │   └── handler                      # Web 异常/返回处理器
-│   ├── rpc                              # RPC（如 Dubbo/GRPC）
-│   │   ├── provider                     # RPC 服务提供者（暴露服务）
-│   │   └── consumer                     # RPC 服务消费者（调用其他服务）
-│   ├── feign                            # Feign 适配层
-│   │   ├── client                       # Feign client（外部调用）
-│   │   └── fallback                     # Feign 降级处理
-│   ├── mq                               # 消息队列适配
-│   │   ├── producer                     # MQ Producer（事件发送）
-│   │   └── consumer                     # MQ Consumer（事件监听）
-│   ├── oss                              # MinIO/OSS 文件上传适配
-│   ├── gateway                          # 访问第三方 API 的适配器
-│   ├── schedule                         # 定时任务适配
-│   └── convert                          # DTO/VO 与 Command 的 MapStruct 转换
-│
-├── client                               # 客户端层：对外契约层（不包含实现）
-│   ├── api                              # 公开 API 接口（非 Controller）
-│   ├── dto                              # 外部可见的数据结构
-│   │   ├── request                      # 请求 DTO
-│   │   ├── response                     # 响应 DTO
-│   │   └── common                       # 通用 DTO
-│   ├── command                          # Command（写模型）
-│   ├── query                            # Query（读模型）
-│   ├── enums                            # 响应/请求相关的枚举
-│   └── vo                               # Value Object（对外展示值对象）
-│
-├── app                                  # 应用服务层：业务流程编排
-│   ├── service                          # 应用服务（流程控制，用例编排）
-│   │   ├── command                      # 写操作（含事务）
-│   │   └── query                        # 查询流程
-│   ├── executor                         # COLA 风格的执行器
-│   │   ├── command                      # CommandExecutor
-│   │   └── query                        # QueryExecutor
-│   ├── assemble                         # 数据组装（DTO ↔︎ Domain）
-│   ├── convert                          # MapStruct 转换（Command ↔︎ Entity）
-│   └── validator                        # 业务校验（非领域规则）
-│
-├── domain                               # 领域层：核心业务模型
-│   ├── model                            # 领域模型
-│   │   ├── entity                       # 实体（含业务行为）
-│   │   ├── aggregate                    # 聚合根
-│   │   ├── vo                           # 值对象（不可变）
-│   │   └── enums                        # 领域枚举
-│   ├── service                          # 领域服务（复杂业务规则）
-│   ├── repository                       # 仓储接口（仅接口）
-│   ├── event                            # 领域事件
-│   │   ├── publisher                    # 事件发布接口
-│   │   └── subscriber                   # 事件订阅接口
-│   └── spec                             # 领域规约（Specification）
-│
-└── infra                                # 基础设施层：所有技术实现
-    ├── config                           # MyBatis/Redis 等技术配置
-    ├── db                               # 数据库访问
-    │   ├── mapper                       # MyBatis Mapper
-    │   ├── entity                       # DO（数据库对象）
-    │   └── convert                      # DO ↔︎ Entity 转换
-    ├── repository                       # 仓储接口实现
-    ├── cache                            # 缓存
-    │   ├── redis                        # Redis 实现
-    │   └── local                        # 本地缓存（Caffeine）
-    ├── mq                               # MQ 实现（Kafka/RocketMQ）
-    │   ├── producer                     # Producer
-    │   └── consumer                     # Consumer
-    ├── oss                              # 文件存储实现
-    ├── gateway                          # HTTP 调用第三方服务实现
-    ├── http                             # HttpClient 封装
-    ├── util                             # 工具类（仅技术相关）
-    └── error                            # Infra 专用异常
+#### Adapter 层（`adapter`）
+
+| 子包 | 用途 | 命名规范 |
+|-----|------|---------|
+| `web/controller` | REST 控制器 | `{Domain}Controller` |
+| `web/request` | Web 请求对象 | `{Verb}{Domain}Request` |
+| `web/convert` | 请求转换器 | `{Domain}WebConverter` |
+| `rpc/provider` | RPC 服务提供者 | `{Domain}RpcProvider` |
+| `mq/consumer` | MQ 消息消费者 | `{Domain}MqConsumer` |
+
+#### App 层（`app`）
+
+| 子包 | 用途 | 命名规范 |
+|-----|------|---------|
+| `{aggregate}` | 聚合根业务包 | 小写聚合名（如 `customer`） |
+| `executor` | 命令/查询执行器 | `{Domain}{Action}CmdExe`、`{Domain}{Action}QryExe` |
+| `convert` | Cmd→Entity 转换器 | `{Domain}Converter` |
+| `assembler` | Entity→CO 组装器 | `{Domain}Assembler` |
+| `listener` | 事件监听器 | `{Domain}EventListener` |
+
+**Client 接口实现**：`{Domain}ClientImpl`
+
+#### Domain 层（`domain`）
+
+| 子包 | 用途 | 命名规范 |
+|-----|------|---------|
+| `{aggregate}/model` | 领域模型 | `{Domain}`（Entity）、`{Name}`（VO） |
+| `{aggregate}/service` | 领域服务 | `{Domain}DomainService` |
+| `{aggregate}/repository` | 仓储接口 | `{Domain}Repository` |
+| `{aggregate}/event` | 领域事件 | `{Domain}{Action}Event`（过去时） |
+
+#### Infrastructure 层（`infrastructure`）
+
+| 子包 | 用途 | 命名规范 |
+|-----|------|---------|
+| `persistence/dataobject` | 数据库对象 | `{Domain}DO` + `@AutoMybatis` |
+| `persistence/converter` | DO↔Entity 转换器 | `{Domain}Converter` |
+| `persistence/impl` | Repository 实现 | `{Domain}RepositoryImpl` |
+| `gateway` | 第三方服务调用 | `{External}GatewayImpl` |
+| `config` | 技术配置 | `{Tech}Config` |
+
+## 对象转换链路
+
+```mermaid
+flowchart LR
+    A[HTTP Request<br/>JSON] -->|Jackson| B[Request DTO]
+    B -->|WebConverter| C[Command/Query]
+    C -->|Converter| D[Entity]
+    D -->|Converter| E[DO]
+    E -->|MyBatis-Plus| F[(Database)]
+    
+    F -->|MyBatis-Plus| E
+    E -->|Converter| D
+    D -->|Assembler| G[CO]
+    G -->|Jackson| H[HTTP Response<br/>JSON]
+    
+    style A fill:#e3f2fd
+    style H fill:#e3f2fd
+    style D fill:#fff9c4
+    style E fill:#f3e5f5
+    style F fill:#e8f5e9
 ```
 
-**包命名规则**：
-- Start 层：`com.yggdrasil.labs.start.*` - 仅包含启动类和框架配置
-- Adapter 层：`com.yggdrasil.labs.adapter.*` - 所有 IO 通道适配
-- Client 层：`com.yggdrasil.labs.client.*` - 对外契约定义
-- App 层：`com.yggdrasil.labs.app.*` - 业务流程编排
-- Domain 层：`com.yggdrasil.labs.domain.*` - 核心业务规则
-- Infrastructure 层：`com.yggdrasil.labs.infra.*` - 技术实现
+### 转换器职责
 
-## 模块依赖关系示意图
-
-整体依赖关系遵循“内核稳定、外层依赖内层”的原则，禁止反向依赖和环依赖：
-
-```text
-          ┌───────────────┐
-          │    start      │  启动层：聚合所有业务模块，仅做启动与配置
-          └──────┬────────┘
-                 │ 依赖
-        ┌────────┼───────────────────────────┐
-        │        │                           │
-        ▼        ▼                           ▼
-   ┌────────┐ ┌────────┐               ┌──────────────┐
-   │adapter │ │  app   │               │infrastructure│
-   └───┬────┘ └────┬───┘               └──────┬───────┘
-       │ 依赖      │ 依赖                       │ 依赖
-       ▼           ▼                            ▼
-   ┌────────┐  ┌────────┐                 ┌────────┐
-   │ client │  │ domain │ ◀────────────── │  infra │
-   └────────┘  └────────┘   只依赖 COLA 组件      （同一模块内的包结构）
-```
-
-- **client**：对外契约层，**不依赖任何业务实现模块**（app / domain / infra / adapter）。
-- **domain**：领域层，**不依赖 client / app / infra / adapter**，仅依赖 COLA 领域组件。
-- **app**：应用服务层，依赖 `client`（用例契约）和 `domain`（领域模型与仓储接口），**不依赖 infrastructure 实现**。
-- **infrastructure**：基础设施层，依赖 `domain`，实现仓储等技术细节，**不被上层直接依赖为业务入口**。
-- **adapter**：适配层，只依赖 `client`，使用其中的 API/Command/Query/DTO 作为入参和出参。
-- **start**：启动层，显式依赖 `adapter`、`app`、`domain`、`infrastructure`，负责聚合模块与装配 Bean，但**不写业务逻辑**。
-
-## 对象转换规范
-
-项目遵循以下对象转换规范，确保各层职责清晰：
+| 层 | 转换器 | 方向 | 工具 |
+|---|--------|------|------|
+| Adapter | `{Domain}WebConverter` | Request ↔ Cmd/Query | MapStruct |
+| App | `{Domain}Converter` | Cmd → Entity | MapStruct |
+| App | `{Domain}Assembler` | Entity → CO | MapStruct |
+| Infrastructure | `{Domain}Converter` | Entity ↔ DO | MapStruct |
 
 ### 参数校验
-- **位置**: Client 层
-- **方式**: 在 DTO（包括 RequestDTO、Command、Query）上使用 JSR 303 注解（如 @NotNull、@NotEmpty、@Valid 等）进行参数校验
 
-### 对象转换
-- **App 层 Assembler**: 
-  - Command → Domain Entity
-  - Domain Entity → ResponseDTO
-- **Infrastructure 层 Mapper**: 
-  - Domain Entity ↔ DO（使用 MapStruct 进行双向转换）
+1. **Client 层**：使用 JSR 303 注解（`@NotBlank`、`@Size`、`@Pattern`）
+2. **Adapter 层**：使用 `@Validated` + `@Valid` 启用校验
+3. **Domain 层**：在 Entity 的 `validate()` 方法中校验业务规则
 
-### 转换工具
-- **App 层**: 使用 Assembler（手动转换或 MapStruct）
-- **Infrastructure 层**: 使用 MapStruct 进行 Domain Entity ↔ DO 的转换
+## 快速开始
 
-## Client 命名规范（COLA 5.0 风格）
+### 开发流程
 
-client/api:
-  - {Aggregate}CmdService      // 写接口
-  - {Aggregate}QueryService    // 读接口
+```bash
+# 1. Client 层 - 定义契约
+├── CustomerClient 接口
+├── CreateCustomerCmd（带校验注解）
+├── ListCustomerQuery
+└── CustomerCO
 
-client/dto/command:
-  - Create{Aggregate}Cmd
-  - Update{Aggregate}Cmd
-  - Delete{Aggregate}Cmd
-  - Add{SubResource}Cmd
-  - Modify{SubResource}Cmd
+# 2. Domain 层 - 定义模型
+├── Customer Entity（含 validate() 方法）
+└── CustomerRepository 接口
 
-client/dto/query:
-  - {Aggregate}Query
-  - {Aggregate}ListQuery
-  - {Aggregate}PageQuery
+# 3. Infrastructure 层 - 技术实现
+├── CustomerDO（@AutoMybatis 自动生成 Mapper）
+├── CustomerConverter（DO ↔ Entity）
+└── CustomerRepositoryImpl
 
-client/dto/response:
-  - {Aggregate}DTO
-  - {Aggregate}ListResponse
-  - {Aggregate}PageResponse
+# 4. App 层 - 业务编排
+├── CustomerConverter（Cmd → Entity）
+├── CustomerAssembler（Entity → CO）
+├── CustomerAddCmdExe（@Transactional）
+├── CustomerListQryExe
+└── CustomerClientImpl
 
-## 使用方式
+# 5. Adapter 层 - 协议适配
+├── CreateCustomerRequest
+├── CustomerWebConverter
+└── CustomerController（@Validated）
+```
 
-### 基于模板创建新服务
+## 常见问题
 
-1. 克隆模板项目
-2. 修改包名和项目名
-3. 配置数据库和 Nacos
-4. 开始开发业务功能
+<details>
+<summary><b>Q1: 为什么没有 Mapper 接口文件？</b></summary>
 
-## 文档
+使用 `@AutoMybatis` 注解在编译期自动生成 Mapper 和 Service：
 
-- 各包的 `package-info.java` 文件包含详细的包职责和架构定位说明
-- 查看 `openspec/` 目录了解项目规范和架构设计
+```java
+@TableName("customer")
+@AutoMybatis  // 自动生成 CustomerMapper 和 CustomerService
+public class CustomerDO { }
+```
+</details>
 
-## 状态
+<details>
+<summary><b>Q2: Entity 与 DO 的区别？</b></summary>
 
-🚧 开发中
+- **Entity（领域实体）**：包含业务逻辑和行为方法
+- **DO（数据对象）**：只包含数据字段，对应数据库表
+
+通过 Converter 转换，保持两者独立。
+</details>
+
+<details>
+<summary><b>Q3: Converter 与 Assembler 的区别？</b></summary>
+
+- **Converter**：Cmd → Entity（写入方向）
+- **Assembler**：Entity → CO（读取方向）
+</details>
+
+<details>
+<summary><b>Q4: 如何调用第三方服务？</b></summary>
+
+使用 Gateway 模式：
+1. Domain 层定义 Gateway 接口（如 `PaymentGateway`）
+2. Infrastructure 层实现接口（如 `PaymentGatewayImpl`）
+</details>
+
+## 最佳实践
+
+### ✅ 关键原则
+
+- **依赖倒置**：Domain 定义接口，Infrastructure 实现
+- **单一职责**：各层职责清晰，避免越界
+- **事务边界**：在 App 层 Executor 上使用 `@Transactional`
+- **参数校验**：Client 层 JSR 303 + Domain 层业务规则
+- **异常处理**：技术异常转换为领域异常
+
+### 📚 详细文档
+
+- 各包的 `package-info.java` 包含详细架构说明和代码示例
+- `openspec/` 目录包含项目规范和设计文档
+
+## 使用模板
+
+```bash
+# 1. 克隆项目
+git clone <template-repo-url>
+
+# 2. 修改包名
+# 全局替换：com.yggdrasil.labs → com.your.company
+
+# 3. 修改项目名
+# pom.xml: midgard-backend-template → your-service-name
+
+# 4. 配置环境
+# start/src/main/resources/application.yml
+
+# 5. 启动项目
+./mvnw spring-boot:run
+```
+
+## 相关资源
+
+- [COLA 架构](https://github.com/alibaba/COLA)
+- [阿里巴巴 Java 开发手册](https://github.com/alibaba/p3c)
+- [MapStruct 文档](https://mapstruct.org/)
+- [MyBatis-Plus 文档](https://baomidou.com/)
+
+## 贡献指南
+
+遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+
+```
+feat: 新增功能
+fix: 修复 Bug
+docs: 文档更新
+refactor: 代码重构
+```

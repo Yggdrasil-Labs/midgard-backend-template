@@ -42,7 +42,7 @@
  * <p><b>使用场景：</b>
  *
  * <ul>
- *   <li>作为 Facade 读操作方法的参数
+ *   <li>作为 Client 读操作方法的参数
  *   <li>在 Adapter 层由 Request 对象转换而来
  *   <li>在 App 层用于构建查询条件
  * </ul>

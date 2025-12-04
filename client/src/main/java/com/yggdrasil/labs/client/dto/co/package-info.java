@@ -31,7 +31,7 @@
  * <p><b>使用场景：</b>
  *
  * <ul>
- *   <li>作为 Facade 读操作方法的返回值类型
+ *   <li>作为 Client 读操作方法的返回值类型
  *   <li>在 App 层由 Domain Entity 转换而来
  *   <li>在 Adapter 层直接返回给前端
  * </ul>

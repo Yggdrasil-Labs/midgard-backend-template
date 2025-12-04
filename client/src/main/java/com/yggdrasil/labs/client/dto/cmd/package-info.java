@@ -43,7 +43,7 @@
  * <p><b>使用场景：</b>
  *
  * <ul>
- *   <li>作为 Facade 写操作方法的参数
+ *   <li>作为 Client 写操作方法的参数
  *   <li>在 Adapter 层由 Request 对象转换而来
  *   <li>在 App 层转换为 Domain 层的 Entity 对象
  * </ul>
