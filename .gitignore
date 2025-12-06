@@ -3,9 +3,6 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# Maven Wrapper
-.mvn/wrapper/maven-wrapper.jar
-
 # Maven Flatten Plugin
 .flattened-pom.xml
 ### eclipse ###
@@ -38,6 +35,3 @@ doc/
 
 ### VS Code ###
 .vscode/
-
-# Maven Wrapper
-.mvn/wrapper/maven-wrapper.jar
