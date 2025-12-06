@@ -55,10 +55,6 @@
             <artifactId>mysql-connector-j</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.yggdrasil.labs</groupId>
             <artifactId>mimir-boot-starter-test</artifactId>
             <scope>test</scope>
