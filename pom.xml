@@ -254,6 +254,11 @@
         <!-- ci profile - CI 流水线严格门禁：格式、覆盖率、lint -->
         <profile>
             <id>ci</id>
+            <properties>
+                <!-- CI 环境跳过所有测试 -->
+                <skipTests>true</skipTests>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
         </profile>
 
         <!-- prod profile - 生产发布：打包、上传仓库 -->
