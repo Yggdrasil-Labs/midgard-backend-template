@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://8.134.198.8:3306/midgard
-    username: midgard
-    password: y3fzkBMJQt3R62YE
+    url: jdbc:mysql://8.xxx.xxx.8:3306/midgard
+    username: xxx
+    password: xxx
 
 logging:
   level:
