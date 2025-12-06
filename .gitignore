@@ -39,3 +39,5 @@ doc/
 ### AI ###
 .cursor/
 openspec/
+
+application-local.yml
