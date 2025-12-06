@@ -8,7 +8,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "saturday"
-      time: "12:00"
+      time: "11:00"
     open-pull-requests-limit: 10
     reviewers:
       - "YoungerYang-Y"
