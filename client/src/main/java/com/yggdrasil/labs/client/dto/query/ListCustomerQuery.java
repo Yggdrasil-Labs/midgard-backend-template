@@ -1,6 +1,6 @@
 package com.yggdrasil.labs.client.dto.query;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import com.alibaba.cola.dto.Query;
 

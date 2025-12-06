@@ -184,7 +184,7 @@ flowchart LR
 # 4. App 层 - 业务编排
 ├── CustomerConverter（Cmd → Entity）
 ├── CustomerAssembler（Entity → CO）
-├── CustomerAddCmdExe（@Transactional）
+├── CustomerCreateCmdExe（@Transactional）
 ├── CustomerListQryExe
 └── CustomerClientImpl
 

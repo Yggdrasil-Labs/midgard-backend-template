@@ -11,12 +11,12 @@ import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
 
 /**
- * CustomerAddCmdExe：创建客户命令执行器
+ * CustomerCreateCmdExe：创建客户命令执行器
  *
  * <p>负责编排创建客户的流程：转换 → 校验 → 持久化
  */
 @Component
-public class CustomerAddCmdExe {
+public class CustomerCreateCmdExe {
 
     @Autowired private CustomerRepository customerRepository;
 

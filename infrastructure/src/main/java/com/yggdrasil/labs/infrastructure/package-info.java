@@ -107,4 +107,4 @@
  *
  * @author Midgard Team
  */
-package com.yggdrasil.labs.infra;
+package com.yggdrasil.labs.infrastructure;

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.cola.catchlog.CatchAndLog;
 import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
-import com.yggdrasil.labs.app.customer.executor.CustomerAddCmdExe;
+import com.yggdrasil.labs.app.customer.executor.CustomerCreateCmdExe;
 import com.yggdrasil.labs.app.customer.query.CustomerListQryExe;
 import com.yggdrasil.labs.client.api.CustomerClient;
 import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
@@ -17,13 +17,13 @@ import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
 @CatchAndLog
 public class CustomerClientImpl implements CustomerClient {
 
-    @Autowired private CustomerAddCmdExe customerAddCmdExe;
+    @Autowired private CustomerCreateCmdExe customerCreateCmdExe;
 
     @Autowired private CustomerListQryExe customerListQryExe;
 
     @Override
     public Response createCustomer(CreateCustomerCmd cmd) {
-        return customerAddCmdExe.execute(cmd);
+        return customerCreateCmdExe.execute(cmd);
     }
 
     @Override

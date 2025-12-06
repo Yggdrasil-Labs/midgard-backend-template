@@ -82,7 +82,7 @@
  * <pre>{@code
  * // 在 Executor 中发布事件
  * @Service
- * public class CustomerAddCmdExe {
+ * public class CustomerCreateCmdExe {
  *
  *     @Resource
  *     private ApplicationEventPublisher eventPublisher;

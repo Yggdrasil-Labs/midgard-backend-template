@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.infra.persistence.impl;
+package com.yggdrasil.labs.infrastructure.persistence.impl;
 
 import java.util.List;
 
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
-import com.yggdrasil.labs.infra.persistence.converter.CustomerConverter;
-import com.yggdrasil.labs.infra.persistence.dataobject.CustomerDO;
-import com.yggdrasil.labs.infra.persistence.dataobject.mapper.CustomerMapper;
+import com.yggdrasil.labs.infrastructure.persistence.converter.CustomerConverter;
+import com.yggdrasil.labs.infrastructure.persistence.dataobject.CustomerDO;
+import com.yggdrasil.labs.infrastructure.persistence.dataobject.mapper.CustomerMapper;
 
 /**
  * CustomerRepository 实现类

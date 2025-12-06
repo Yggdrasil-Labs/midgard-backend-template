@@ -26,4 +26,4 @@
  *   <li>不要在 Converter 中包含业务逻辑
  * </ul>
  */
-package com.yggdrasil.labs.infra.persistence.converter;
+package com.yggdrasil.labs.infrastructure.persistence.converter;

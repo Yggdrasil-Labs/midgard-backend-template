@@ -1,4 +1,4 @@
-package com.yggdrasil.labs.infra.persistence.converter;
+package com.yggdrasil.labs.infrastructure.persistence.converter;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.yggdrasil.labs.domain.customer.model.Customer;
-import com.yggdrasil.labs.infra.persistence.dataobject.CustomerDO;
+import com.yggdrasil.labs.infrastructure.persistence.dataobject.CustomerDO;
 
 /**
  * Customer DO ↔ Entity Converter

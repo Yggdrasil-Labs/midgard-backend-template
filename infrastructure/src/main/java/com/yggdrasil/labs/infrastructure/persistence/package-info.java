@@ -103,4 +103,4 @@
  *
  * @author Midgard Team
  */
-package com.yggdrasil.labs.infra.persistence;
+package com.yggdrasil.labs.infrastructure.persistence;
