@@ -11,7 +11,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.alibaba.cola.dto.Response;
 import com.yggdrasil.labs.client.api.CustomerClient;
 import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
-import com.yggdrasil.labs.client.dto.cmd.base.CustomerBaseCmd;
 import com.yggdrasil.labs.client.dto.enums.ErrorCode;
 
 /**
@@ -32,9 +31,10 @@ public class CustomerServiceTest {
     public void testCustomerAddSuccess() {
         // 1.prepare
         CreateCustomerCmd cmd = new CreateCustomerCmd();
-        CustomerBaseCmd customer = new CustomerBaseCmd();
-        customer.setCompanyName("NormalName");
-        cmd.setCustomer(customer);
+        cmd.setCustomerId("TEST001");
+        cmd.setCustomerName("测试客户");
+        cmd.setCustomerType("ENTERPRISE");
+        cmd.setCompanyName("NormalName");
 
         // 2.execute
         Response response = customerClient.createCustomer(cmd);
@@ -47,9 +47,10 @@ public class CustomerServiceTest {
     public void testCustomerAddCompanyNameConflict() {
         // 1.prepare
         CreateCustomerCmd cmd = new CreateCustomerCmd();
-        CustomerBaseCmd customer = new CustomerBaseCmd();
-        customer.setCompanyName("ConflictCompanyName");
-        cmd.setCustomer(customer);
+        cmd.setCustomerId("TEST002");
+        cmd.setCustomerName("测试客户2");
+        cmd.setCustomerType("ENTERPRISE");
+        cmd.setCompanyName("ConflictCompanyName");
 
         // 2.execute
         Response response = customerClient.createCustomer(cmd);

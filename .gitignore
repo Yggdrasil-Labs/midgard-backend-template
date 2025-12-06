@@ -35,3 +35,7 @@ doc/
 
 ### VS Code ###
 .vscode/
+
+### AI ###
+.cursor/
+openspec/
