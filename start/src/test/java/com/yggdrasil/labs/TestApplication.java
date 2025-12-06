@@ -1,6 +1,7 @@
 package com.yggdrasil.labs;
 
 import org.springframework.boot.SpringApplication;
+
 import com.yggdrasil.labs.start.Application;
 
 public class TestApplication {
