@@ -47,4 +47,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.adapter.web.request;
-

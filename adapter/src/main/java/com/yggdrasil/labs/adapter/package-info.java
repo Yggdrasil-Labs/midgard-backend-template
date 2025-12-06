@@ -16,29 +16,29 @@
  *
  * <ul>
  *   <li><b>web</b>：HTTP 接口适配
- *     <ul>
- *       <li>controller：REST 控制器
- *       <li>request：Web 请求对象
- *       <li>convert：Request ↔ Command/Query 转换
- *       <li>filter：Servlet Filter
- *       <li>interceptor：HandlerInterceptor
- *       <li>handler：异常和返回值处理器
- *     </ul>
+ *       <ul>
+ *         <li>controller：REST 控制器
+ *         <li>request：Web 请求对象
+ *         <li>convert：Request ↔ Command/Query 转换
+ *         <li>filter：Servlet Filter
+ *         <li>interceptor：HandlerInterceptor
+ *         <li>handler：异常和返回值处理器
+ *       </ul>
  *   <li><b>rpc</b>：RPC 接口适配（Dubbo、GRPC）
- *     <ul>
- *       <li>provider：RPC 服务提供者
- *       <li>consumer：RPC 服务消费者
- *     </ul>
+ *       <ul>
+ *         <li>provider：RPC 服务提供者
+ *         <li>consumer：RPC 服务消费者
+ *       </ul>
  *   <li><b>feign</b>：Feign 客户端适配
- *     <ul>
- *       <li>client：Feign 接口定义
- *       <li>fallback：降级处理
- *     </ul>
+ *       <ul>
+ *         <li>client：Feign 接口定义
+ *         <li>fallback：降级处理
+ *       </ul>
  *   <li><b>mq</b>：消息队列适配
- *     <ul>
- *       <li>producer：消息生产者
- *       <li>consumer：消息消费者
- *     </ul>
+ *       <ul>
+ *         <li>producer：消息生产者
+ *         <li>consumer：消息消费者
+ *       </ul>
  *   <li><b>mobile</b>：移动端适配器
  *   <li><b>wap</b>：WAP 端适配器
  *   <li><b>schedule</b>：定时任务适配
@@ -90,4 +90,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.adapter;
-

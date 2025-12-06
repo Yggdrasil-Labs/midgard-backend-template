@@ -126,4 +126,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.domain.customer.event;
-

@@ -1,31 +1,30 @@
 package com.yggdrasil.labs.infra.persistence.impl;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
 import com.yggdrasil.labs.infra.persistence.converter.CustomerConverter;
 import com.yggdrasil.labs.infra.persistence.dataobject.CustomerDO;
 import com.yggdrasil.labs.infra.persistence.dataobject.mapper.CustomerMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * CustomerRepository 实现类
- * 
+ *
  * <p>使用 @AutoMybatis 自动生成的 Mapper（CustomerMapper）
- * 
+ *
  * <p>注意：@AutoMybatis 会在编译期生成 CustomerMapper 和 CustomerService
  */
 @Repository
 public class CustomerRepositoryImpl implements CustomerRepository {
-    
-    @Autowired
-    private CustomerMapper customerMapper;
-    
-    @Autowired
-    private CustomerConverter customerConverter;
+
+    @Autowired private CustomerMapper customerMapper;
+
+    @Autowired private CustomerConverter customerConverter;
 
     @Override
     public Customer findById(String customerId) {
@@ -65,4 +64,3 @@ public class CustomerRepositoryImpl implements CustomerRepository {
         return customerMapper.selectCount(wrapper) > 0;
     }
 }
-

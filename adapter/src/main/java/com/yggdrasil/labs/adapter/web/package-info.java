@@ -35,25 +35,28 @@
  *
  * <p><b>Controller 示例：</b>
  *
- * <pre>{@code
- * @RestController
- * @RequestMapping("/api/customers")
- * @Validated
- * public class CustomerController {
+ * <pre>
+ * {
+ *     &#64;code
+ *     &#64;RestController
+ *     &#64;RequestMapping("/api/customers")
+ *     &#64;Validated
+ *     public class CustomerController {
  *
- *     @Resource
- *     private CustomerClient customerClient;
+ *         &#64;Resource
+ *         private CustomerClient customerClient;
  *
- *     @Resource
- *     private CustomerWebConverter converter;
+ *         &#64;Resource
+ *         private CustomerWebConverter converter;
  *
- *     @PostMapping
- *     public Response createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
- *         CreateCustomerCmd cmd = converter.toCmd(request);
- *         return customerClient.createCustomer(cmd);
+ *         @PostMapping
+ *         public Response createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
+ *             CreateCustomerCmd cmd = converter.toCmd(request);
+ *             return customerClient.createCustomer(cmd);
+ *         }
  *     }
  * }
- * }</pre>
+ * </pre>
  *
  * <p><b>依赖关系：</b>
  *
@@ -75,4 +78,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.adapter.web;
-

@@ -52,4 +52,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.start;
-

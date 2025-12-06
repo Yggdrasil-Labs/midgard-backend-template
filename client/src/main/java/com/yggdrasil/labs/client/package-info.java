@@ -17,12 +17,12 @@
  * <ul>
  *   <li><b>api</b>：业务接口定义（Client API），按聚合根组织
  *   <li><b>dto</b>：数据传输对象
- *     <ul>
- *       <li><b>cmd</b>：命令对象（Command），写操作的输入
- *       <li><b>query</b>：查询对象（Query），读操作的输入
- *       <li><b>co</b>：客户对象（Client Object），读操作的输出
- *       <li><b>enums</b>：枚举类型和错误码
- *     </ul>
+ *       <ul>
+ *         <li><b>cmd</b>：命令对象（Command），写操作的输入
+ *         <li><b>query</b>：查询对象（Query），读操作的输入
+ *         <li><b>co</b>：客户对象（Client Object），读操作的输出
+ *         <li><b>enums</b>：枚举类型和错误码
+ *       </ul>
  * </ul>
  *
  * <p><b>设计原则：</b>
@@ -64,4 +64,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.client;
-

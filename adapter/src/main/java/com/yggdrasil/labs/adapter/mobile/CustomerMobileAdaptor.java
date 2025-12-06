@@ -7,4 +7,3 @@ package com.yggdrasil.labs.adapter.mobile;
  * @date 2020-10-27 8:04 PM
  */
 public class CustomerMobileAdaptor {}
-

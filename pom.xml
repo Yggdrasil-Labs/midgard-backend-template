@@ -130,6 +130,65 @@
 
     <build>
         <plugins>
+            <!-- Spotless 代码格式化 - 使用阿里巴巴 Java 开发规范 -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <java>
+                        <!-- 包含的文件 -->
+                        <includes>
+                            <include>src/main/java/**/*.java</include>
+                            <include>src/test/java/**/*.java</include>
+                        </includes>
+                        
+                        <!-- 排除生成的代码 -->
+                        <excludes>
+                            <exclude>**/target/**/*.java</exclude>
+                            <exclude>**/generated/**/*.java</exclude>
+                            <exclude>**/generated-sources/**/*.java</exclude>
+                        </excludes>
+                        
+                        <!-- 使用 Google AOSP 风格（完全符合阿里规范核心要求）
+                             AOSP = Android Open Source Project
+                             - 4 空格缩进（阿里规范）
+                             - K&R 括号风格（阿里规范）
+                             - 工具稳定、CI 友好
+                        -->
+                        <googleJavaFormat>
+                            <version>1.23.0</version>
+                            <style>AOSP</style>
+                            <reflowLongStrings>true</reflowLongStrings>
+                        </googleJavaFormat>
+                        
+                        <!-- 导入顺序：标准 Java 顺序 -->
+                        <importOrder>
+                            <order>java,javax,jakarta,org,com,cn,</order>
+                        </importOrder>
+                        
+                        <!-- 删除未使用的导入 -->
+                        <removeUnusedImports/>
+                        
+                        <!-- 去除行尾空白 -->
+                        <trimTrailingWhitespace/>
+                        
+                        <!-- 文件末尾保留一个空行 -->
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+                <executions>
+                    <!-- 在 validate 阶段执行格式检查 -->
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Flatten Plugin (版本管理) - 复用 mimir-boot-parent 中的配置 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

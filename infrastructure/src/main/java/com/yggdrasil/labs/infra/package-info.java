@@ -16,12 +16,12 @@
  *
  * <ul>
  *   <li><b>persistence</b>：数据持久化
- *     <ul>
- *       <li>dataobject：数据库对象（DO）
- *       <li>mapper：MyBatis Mapper（由 @AutoMybatis 生成）
- *       <li>converter：DO ↔ Entity 转换器
- *       <li>impl：Repository 接口实现
- *     </ul>
+ *       <ul>
+ *         <li>dataobject：数据库对象（DO）
+ *         <li>mapper：MyBatis Mapper（由 @AutoMybatis 生成）
+ *         <li>converter：DO ↔ Entity 转换器
+ *         <li>impl：Repository 接口实现
+ *       </ul>
  *   <li><b>gateway</b>：外部服务调用（Gateway 实现）
  *   <li><b>cache</b>：缓存实现（Redis、本地缓存）
  *   <li><b>mq</b>：消息队列实现（Kafka、RocketMQ）
@@ -108,4 +108,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.infra;
-

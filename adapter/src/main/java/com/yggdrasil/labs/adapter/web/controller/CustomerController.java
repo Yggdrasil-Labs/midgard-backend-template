@@ -1,14 +1,10 @@
 package com.yggdrasil.labs.adapter.web.controller;
 
-import com.alibaba.cola.dto.MultiResponse;
-import com.alibaba.cola.dto.Response;
-import com.yggdrasil.labs.adapter.web.convert.CustomerWebConverter;
-import com.yggdrasil.labs.adapter.web.request.CreateCustomerRequest;
-import com.yggdrasil.labs.client.api.CustomerClient;
-import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
-import com.yggdrasil.labs.client.dto.co.CustomerCO;
-import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import jakarta.annotation.Resource;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,8 +13,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
+import com.alibaba.cola.dto.MultiResponse;
+import com.alibaba.cola.dto.Response;
+import com.yggdrasil.labs.adapter.web.convert.CustomerWebConverter;
+import com.yggdrasil.labs.adapter.web.request.CreateCustomerRequest;
+import com.yggdrasil.labs.client.api.CustomerClient;
+import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
+import com.yggdrasil.labs.client.dto.co.CustomerCO;
+import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
 
 /**
  * 客户管理 Controller
@@ -30,10 +32,8 @@ import javax.validation.constraints.Size;
 @RequestMapping("/customer")
 public class CustomerController {
 
-    @Resource
-    private CustomerClient customerClient;
-    @Resource
-    private CustomerWebConverter customerWebConverter;
+    @Resource private CustomerClient customerClient;
+    @Resource private CustomerWebConverter customerWebConverter;
 
     /**
      * 按名称查询客户列表
@@ -43,9 +43,8 @@ public class CustomerController {
      */
     @GetMapping(value = "/list")
     public MultiResponse<CustomerCO> listCustomerByName(
-            @RequestParam(required = false)
-            @Size(max = 100, message = "客户名称长度不能超过100个字符")
-            String name) {
+            @RequestParam(required = false) @Size(max = 100, message = "客户名称长度不能超过100个字符")
+                    String name) {
         ListCustomerQuery query = new ListCustomerQuery();
         query.setName(name);
         return customerClient.listCustomerByName(query);
@@ -63,4 +62,3 @@ public class CustomerController {
         return customerClient.createCustomer(cmd);
     }
 }
-

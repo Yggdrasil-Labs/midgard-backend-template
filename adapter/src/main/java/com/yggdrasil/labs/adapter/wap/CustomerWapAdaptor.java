@@ -9,4 +9,3 @@ package com.yggdrasil.labs.adapter.wap;
  * @date 2020-10-27 8:03 PM
  */
 public class CustomerWapAdaptor {}
-

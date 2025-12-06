@@ -7,10 +7,8 @@ package com.yggdrasil.labs.domain.customer.model;
  * @date 2018-01-08 11:02 AM
  */
 public enum CompanyType {
-  POTENTIAL,
-  INTENTIONAL,
-  IMPORTANT,
-  VIP;
+    POTENTIAL,
+    INTENTIONAL,
+    IMPORTANT,
+    VIP;
 }
-
-

@@ -1,10 +1,5 @@
 package com.yggdrasil.labs.test;
 
-import com.alibaba.cola.dto.Response;
-import com.yggdrasil.labs.client.api.CustomerClient;
-import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
-import com.yggdrasil.labs.client.dto.cmd.base.CustomerBaseCmd;
-import com.yggdrasil.labs.client.dto.enums.ErrorCode;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +7,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.alibaba.cola.dto.Response;
+import com.yggdrasil.labs.client.api.CustomerClient;
+import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
+import com.yggdrasil.labs.client.dto.cmd.base.CustomerBaseCmd;
+import com.yggdrasil.labs.client.dto.enums.ErrorCode;
 
 /**
  * This is for integration test.
@@ -22,12 +23,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 public class CustomerServiceTest {
 
-    @Autowired
-    private CustomerClient customerClient;
+    @Autowired private CustomerClient customerClient;
 
     @Before
-    public void setUp() {
-    }
+    public void setUp() {}
 
     @Test
     public void testCustomerAddSuccess() {

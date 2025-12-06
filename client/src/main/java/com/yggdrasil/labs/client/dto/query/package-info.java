@@ -60,4 +60,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.client.dto.query;
-

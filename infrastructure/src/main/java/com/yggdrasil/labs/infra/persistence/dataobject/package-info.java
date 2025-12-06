@@ -99,4 +99,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.infra.persistence.dataobject;
-

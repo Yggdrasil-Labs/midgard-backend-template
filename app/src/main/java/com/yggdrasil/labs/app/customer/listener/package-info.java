@@ -150,4 +150,3 @@
  * @author Midgard Team
  */
 package com.yggdrasil.labs.app.customer.listener;
-

@@ -2,7 +2,7 @@ package com.yggdrasil.labs.repository;
 
 public class CustomerMapperTest {
 
-  public void testFindByID() {
-    System.out.println("Write your test here");
-  }
+    public void testFindByID() {
+        System.out.println("Write your test here");
+    }
 }
