@@ -49,6 +49,6 @@
  * <p>这是 Midgard 模板项目的一部分，用于快速开始其他具体的业务项目。 Midgard（中庭）是基于 Cola5.0 DDD 架构的微服务模板项目，用于快速创建符合 DDD
  * 最佳实践的后端服务。
  *
- * @author Midgard Team
+ * @author YoungerYang-Y
  */
 package com.yggdrasil.labs.start;
