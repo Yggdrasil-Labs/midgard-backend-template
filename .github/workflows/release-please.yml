@@ -44,11 +44,12 @@ jobs:
         run: |
           # 尝试获取由 release-please 创建的 PR
           # 使用 head 分支名来查找 PR 是最稳健的
-          PR_NUMBER=$(gh pr list --search "head:release-please--branches--main is:open" --json number --jq '.[0].number')
+          # 显式指定 repo 以避免需要 checkout
+          PR_NUMBER=$(gh pr list --repo ${{ github.repository }} --search "head:release-please--branches--main is:open" --json number --jq '.[0].number')
           
           if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
             echo "Found Release PR: #$PR_NUMBER"
-            gh pr edit "$PR_NUMBER" --add-label "🚀 release"
+            gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "🚀 release"
             echo "Added '🚀 release' label to PR #$PR_NUMBER"
           else
             echo "No open release PR found, skipping label."
