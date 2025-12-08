@@ -3,6 +3,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "pull-request-title-pattern": "chore(${branch}): release ${repository} ${version}",
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true,
       "extra-files": [
