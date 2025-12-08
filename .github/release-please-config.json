@@ -1,9 +1,7 @@
 {
-  "bootstrap-sha": "357149a4f464386861dd0d23cc96c57fce7465af",
   "packages": {
     ".": {
       "release-type": "simple",
-      "pull-request-title-pattern": "chore(${branch}): release ${repository} ${version}",
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true,
       "extra-files": [
