@@ -34,6 +34,9 @@ jobs:
           manifest-file: .github/.release-please-manifest.json
           # 禁用自动添加标签（如 autorelease: snapshot），由后续步骤手动添加自定义标签
           skip-labeling: true
+          # 禁用自动创建 GitHub Release/Tag，交由 create-tag 工作流处理
+          # 这样可以使用 PAT (RELEASE_TOKEN) 创建 Tag，从而自动触发 Release 构建工作流
+          skip-github-release: true
 
       - name: Debug release-please outputs
         if: always()
