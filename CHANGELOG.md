@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/midgard-backend-template-v1.0.0...midgard-backend-template-v1.1.0) (2025-12-08)
+
+
+### ✨ Features
+
+* 增加db目录 ([04060da](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/04060dac1d8f85a8068f5a3ac6a7a827c33b5eff))
+
+
+### 🐛 Bug Fixes
+
+* 删除数据库信息 ([c38b2fb](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c38b2fb4484f74d35fe2cdf0fec8948a2e1423ab))
+
+
+### 👷 Continuous Integration
+
+* action的依赖升级 ([83f6fef](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/83f6fef46673d304a15bff637d94ef81e80f721f))
+* **release:** Release Note 增加Icon ([805c6d6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/805c6d67aec754d1ce2115122c1d1e26a6e5c009))
+
+
+### 🔧 Miscellaneous Chores
+
+* 修正bootstrap-sha ([4baf74d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/4baf74dc303125c4f068b0a3a8b11d02502a7728))
+* 忽略 application-local.yml ([71e1021](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/71e10211f260026ef7f9f95b1a2de5e62449d80d))
+* 校验API依赖升级 ([3702b6a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3702b6a994df496435f8284ce6632cfa2c972f28))
+* 统一author ([62bb6eb](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/62bb6ebfff443deaa6eb3aa66fa9388bf95f17fc))
+
 ## 1.0.0 (2025-12-06)
 
 
