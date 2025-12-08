@@ -35,46 +35,43 @@ jobs:
             console.log(`Conclusion: ${workflowRun.conclusion}`);
             console.log(`Event: ${workflowRun.event}`);
             console.log(`Head branch: ${workflowRun.head_branch}`);
+            console.log(`Head SHA: ${workflowRun.head_sha}`);
             
-            // 获取最近的合并到 main 的 PR（最近 10 个）
-            const { data: prs } = await github.rest.pulls.list({
+            // 直接查找与触发 commit 关联的 PR
+            // 这比列出最近 PR 并检查时间戳更可靠，也避免了竞态条件
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'closed',
-              base: 'main',
-              sort: 'updated',
-              direction: 'desc',
-              per_page: 10
+              commit_sha: workflowRun.head_sha,
             });
             
-            // 查找最近合并的 release PR（在最近 5 分钟内合并的）
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            console.log(`Found ${prs.length} associated PRs`);
+            
             const releasePR = prs.find(pr => {
+              // 确保 PR 已合并
               if (!pr.merged_at) return false;
-              
-              const mergedAt = new Date(pr.merged_at);
-              const isRecent = mergedAt > fiveMinutesAgo;
+
               // 支持两种分支格式：
               // 1. simple release type: release-please--branches--main
               // 2. java release type: release-please--branches--main--components--*
-              const isReleasePR = pr.head.ref.startsWith('release-please--branches--main') ||
-                                pr.title.match(/chore\(main\): release/) ||
-                                pr.title.includes('release');
+              const isReleaseBranch = pr.head.ref.startsWith('release-please--branches--main');
+              const isReleaseTitle = pr.title.match(/chore\(main\): release/) || pr.title.includes('release');
               
-              return isRecent && isReleasePR;
+              return isReleaseBranch || isReleaseTitle;
             });
             
             if (releasePR) {
-              console.log(`✓ Found recently merged release PR: #${releasePR.number}`);
+              console.log(`✓ Found associated release PR: #${releasePR.number}`);
               console.log(`  Title: ${releasePR.title}`);
               console.log(`  Head ref: ${releasePR.head.ref}`);
               console.log(`  Merged at: ${releasePR.merged_at}`);
               console.log(`  Merge commit SHA: ${releasePR.merge_commit_sha}`);
               
               core.setOutput('is_release_pr', 'true');
-              core.setOutput('merge_commit_sha', releasePR.merge_commit_sha || '');
+              // 如果有关联 PR，使用其 merge_commit_sha；否则回退到 workflow_run.head_sha
+              core.setOutput('merge_commit_sha', releasePR.merge_commit_sha || workflowRun.head_sha);
             } else {
-              console.log('ℹ️  No recently merged release PR found');
+              console.log('ℹ️  No associated release PR found for this commit');
               console.log('   This workflow will be skipped');
               core.setOutput('is_release_pr', 'false');
               core.setOutput('merge_commit_sha', '');
@@ -90,7 +87,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           # 使用 RELEASE_TOKEN 进行 checkout，确保后续推送使用相同的 token
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           # checkout 到合并后的 commit（优先使用 merge_commit_sha，否则使用 main 分支）
