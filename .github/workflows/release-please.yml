@@ -39,16 +39,17 @@ jobs:
           skip-github-release: true
 
       - name: Add 🚀 release label to PR
-        if: ${{ steps.release.outputs.pull_request_number != '' }}
-        uses: actions-ecosystem/action-add-labels@18f1af5e3544586314bbe15c0273249c770b2daf # v1.1.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          number: ${{ steps.release.outputs.pull_request_number }}
-          labels: |
-            🚀 release
-
-      - name: Note about tag creation
-        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "ℹ️  Release PR merged. Tag creation will be handled by the 'Create Tag' workflow."
-          echo "   The 'Create Tag' workflow will be triggered automatically after this workflow completes."
+          # 尝试获取由 release-please 创建的 PR
+          # 使用 head 分支名来查找 PR 是最稳健的
+          PR_NUMBER=$(gh pr list --search "head:release-please--branches--main is:open" --json number --jq '.[0].number')
+          
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            echo "Found Release PR: #$PR_NUMBER"
+            gh pr edit "$PR_NUMBER" --add-label "🚀 release"
+            echo "Added '🚀 release' label to PR #$PR_NUMBER"
+          else
+            echo "No open release PR found, skipping label."
+          fi
