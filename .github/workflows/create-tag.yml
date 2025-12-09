@@ -8,6 +8,8 @@ on:
       - completed
     branches:
       - main
+  # 允许手动触发以修复失败的 tag
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,7 +17,7 @@ permissions:
 jobs:
   check-release-pr-merged:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       pull-requests: read
@@ -80,7 +82,10 @@ jobs:
   create-and-push-tag:
     runs-on: ubuntu-latest
     needs: [check-release-pr-merged]
-    if: needs.check-release-pr-merged.outputs.is_release_pr == 'true'
+    # 如果是手动触发，或者是自动触发且检测到是 release PR，则执行
+    if: |
+      always() && 
+      (github.event_name == 'workflow_dispatch' || needs.check-release-pr-merged.outputs.is_release_pr == 'true')
     permissions:
       contents: write
     steps:
@@ -89,7 +94,7 @@ jobs:
         with:
           fetch-depth: 1
           # checkout 到合并后的 commit（优先使用 merge_commit_sha，否则使用 main 分支）
-          ref: ${{ needs.check-release-pr-merged.outputs.merge_commit_sha || 'main' }}
+          ref: ${{ (needs.check-release-pr-merged.outputs.merge_commit_sha != '' && needs.check-release-pr-merged.outputs.merge_commit_sha) || 'main' }}
 
       - name: Extract version from manifest
         id: get_version
@@ -217,21 +222,13 @@ jobs:
             if [ -n "$RELEASE_TOKEN" ] && [ "$RELEASE_TOKEN" != "" ]; then
               echo "Using RELEASE_TOKEN to push tag (will trigger Release workflow automatically)"
               
-              # 重要：清除 checkout 步骤设置的 GITHUB_TOKEN 凭证，否则它可能会覆盖 URL 中的 PAT
-              # 导致推送仍然使用 GITHUB_TOKEN，从而无法触发后续工作流
-              git config --unset-all http.https://github.com/.extraheader || true
-              
-              # 配置 git 使用 PAT 进行推送
-              # 注意：PAT 需要使用 'x-access-token' 作为用户名，而不是实际的 GitHub 用户名
-              git remote set-url origin https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-              
-              # 验证 remote URL 配置
-              echo "Current remote URL:"
-              git remote get-url origin | sed 's/\/\/.*@/\/\/***@/'  # 隐藏 token
+              # 直接构造带 Token 的 URL 进行推送，这是最稳健的方式
+              # 避免依赖 git config 清理和 credential helper 可能导致的回退问题
+              GIT_API_URL="https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
               
               # 推送 tag
               echo "Pushing tag $TAG_NAME..."
-              if git push origin "$TAG_NAME"; then
+              if git push "$GIT_API_URL" "$TAG_NAME"; then
                 echo "✓ Successfully created and pushed tag: $TAG_NAME using RELEASE_TOKEN"
                 echo "✓ This should trigger the Release workflow automatically"
               else
