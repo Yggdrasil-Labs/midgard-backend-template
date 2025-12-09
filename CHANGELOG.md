@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.1.1) (2025-12-09)
+
+
+### 👷 Continuous Integration
+
+* **cerate-tag:** 清除 checkout 步骤设置的 GITHUB_TOKEN 凭证 ([39ccef2](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/39ccef22924c316dd25aeffd46705641551f9751))
+
 ## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-09)
 
 
