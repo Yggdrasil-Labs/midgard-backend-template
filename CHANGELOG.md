@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-09)
+
+
+### ✨ Features
+
+* 增加db目录 ([04060da](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/04060dac1d8f85a8068f5a3ac6a7a827c33b5eff))
+
+
+### 🐛 Bug Fixes
+
+* 🐛 Bug: Code界面的README展示错误 ([4594210](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/459421058d20e077cd93f5b5e04477366325bc73)), closes [#18](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/18)
+* 删除数据库信息 ([c38b2fb](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c38b2fb4484f74d35fe2cdf0fec8948a2e1423ab))
+
+
+### 📝 Documentation
+
+* 新增工作流的相关文档 ([36765b3](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/36765b3d3f0f5d71a6f42f4bc6d194545754761d))
+* 更新文档 ([9144473](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/91444735af2d3a7b98e575a21abd0eea0f0524e2))
+* 更新文档引用 ([d79cfae](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d79cfae05118634bbddd71a31916ed71c0803213))
+
+
+### 👷 Continuous Integration
+
+* action的依赖升级 ([83f6fef](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/83f6fef46673d304a15bff637d94ef81e80f721f))
+* **cerate-tag:** 清除 checkout 步骤设置的 GITHUB_TOKEN 凭证 ([c392217](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c3922178c9c1c5e91cc1a1b07f749e55a0839ff0))
+* **create-tag:** 优化检查 release PR是否已合入的逻辑 ([9c1f654](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/9c1f654af496a0e47040907494964bd5bd48ee8e))
+* **release-please:** PR就使用默认的格式，也不需要bootstrap-sha记录上次发布点 ([6f535ca](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/6f535ca8c4e28b1f990a9026ed8d8e2403b9571d))
+* **release-please:** 不在工作流中写死仓库名 ([a157927](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/a1579271198add469e8fa6613ad6e7b461b3840b))
+* **release-please:** 修复没打自定义标签问题 ([2737674](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/273767480d04dbd3302d9f53441e7048029a424b))
+* **release-please:** 去掉package-name，PR的title默认会使用当前仓库名 ([320a31d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/320a31df13ffc9256f8c536244985b3f072be5e0))
+* **release-please:** 指定PR的title模板 ([2f8a728](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/2f8a728a9c1b4af891d6b19d1b9b7dbcbd63f1d4))
+* **release-please:** 正确获取pom的reversion ([350cf12](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/350cf12d3dc9555d2420dbec58f4ac7f52e8aa2c))
+* **release-please:** 禁用自动创建Github Release/Tag ([f914e42](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/f914e424d562834080c155ecc3570f54b892fd01))
+* **release-please:** 简化流水线，修复没打自定义标签问题 ([a69f1de](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/a69f1de7cebe3cd45d4fae4885c9d8d4a3a57899))
+* **release-please:** 自动重试打标签 ([b4e2df3](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b4e2df316135aa34f6475f707718cb5c7c5ea908))
+* **release:** Release Note 增加Icon ([805c6d6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/805c6d67aec754d1ce2115122c1d1e26a6e5c009))
+* 工作流优化 ([560456d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/560456d5f308e3a75d91ccb9d1a862d7655ebc4f))
+* 简化release please，不需要额外更新revision ([eb56125](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/eb561258bd74eb984ca71d94d56f95ba31f92736))
+
+
+### 🔧 Miscellaneous Chores
+
+* 修正bootstrap-sha ([4baf74d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/4baf74dc303125c4f068b0a3a8b11d02502a7728))
+* 忽略 application-local.yml ([71e1021](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/71e10211f260026ef7f9f95b1a2de5e62449d80d))
+* 校验API依赖升级 ([3702b6a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3702b6a994df496435f8284ce6632cfa2c972f28))
+* 统一author ([62bb6eb](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/62bb6ebfff443deaa6eb3aa66fa9388bf95f17fc))
+
 ## 1.0.0 (2025-12-06)
 
 
