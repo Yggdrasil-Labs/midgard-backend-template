@@ -284,4 +284,4 @@ docs: 文档更新
 refactor: 代码重构
 ```
 
-详细的自动化发布流程说明请参考 [工作流文档](.github/README.md)。
+详细的自动化发布流程说明请参考 [工作流文档](.github/Workflow.md)。
