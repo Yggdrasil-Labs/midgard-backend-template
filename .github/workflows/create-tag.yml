@@ -95,6 +95,8 @@ jobs:
           fetch-depth: 1
           # checkout 到合并后的 commit（优先使用 merge_commit_sha，否则使用 main 分支）
           ref: ${{ (needs.check-release-pr-merged.outputs.merge_commit_sha != '' && needs.check-release-pr-merged.outputs.merge_commit_sha) || 'main' }}
+          # 关键：不持久化 GITHUB_TOKEN，避免它干扰后续使用 RELEASE_TOKEN 的推送
+          persist-credentials: false
 
       - name: Extract version from manifest
         id: get_version
