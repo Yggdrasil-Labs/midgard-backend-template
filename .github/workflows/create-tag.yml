@@ -216,6 +216,11 @@ jobs:
             # 如果 RELEASE_TOKEN 不存在，回退到 GITHUB_TOKEN（但不会触发工作流）
             if [ -n "$RELEASE_TOKEN" ] && [ "$RELEASE_TOKEN" != "" ]; then
               echo "Using RELEASE_TOKEN to push tag (will trigger Release workflow automatically)"
+              
+              # 重要：清除 checkout 步骤设置的 GITHUB_TOKEN 凭证，否则它可能会覆盖 URL 中的 PAT
+              # 导致推送仍然使用 GITHUB_TOKEN，从而无法触发后续工作流
+              git config --unset-all http.https://github.com/.extraheader || true
+              
               # 配置 git 使用 PAT 进行推送
               # 注意：PAT 需要使用 'x-access-token' 作为用户名，而不是实际的 GitHub 用户名
               git remote set-url origin https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
