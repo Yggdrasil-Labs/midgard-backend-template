@@ -2,4 +2,4 @@ spring:
   application:
     name: midgard-backend-template
   profiles:
-    active: dev
+    active: local
