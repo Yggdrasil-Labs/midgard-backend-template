@@ -55,10 +55,11 @@ flowchart TD
     Start[Start 启动层] -->|依赖| Adapter[Adapter 适配层]
     Start -->|依赖| App[App 应用层]
     Start -->|依赖| Infrastructure[Infrastructure 基础设施层]
+    Start -->|依赖| Domain[Domain 领域层]
     
     Adapter -->|依赖| Client[Client 客户端层]
     App -->|依赖| Client
-    App -->|依赖| Domain[Domain 领域层]
+    App -->|依赖| Domain
     Infrastructure -->|依赖| Domain
     
     style Domain fill:#e8f5e9
