@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.cola.dto.Response;
-import com.yggdrasil.labs.app.customer.convert.CustomerConverter;
+import com.yggdrasil.labs.app.customer.convert.CustomerAppConverter;
 import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
@@ -20,7 +20,7 @@ public class CustomerCreateCmdExe {
 
     @Autowired private CustomerRepository customerRepository;
 
-    @Autowired private CustomerConverter customerConverter;
+    @Autowired private CustomerAppConverter customerAppConverter;
 
     /**
      * 执行创建客户命令
@@ -39,7 +39,7 @@ public class CustomerCreateCmdExe {
     @Transactional(rollbackFor = Exception.class)
     public Response execute(CreateCustomerCmd cmd) {
         // 1. Cmd → Entity
-        Customer customer = customerConverter.toEntity(cmd);
+        Customer customer = customerAppConverter.toEntity(cmd);
 
         // 2. 调用 Domain 层的业务规则
         customer.validate();

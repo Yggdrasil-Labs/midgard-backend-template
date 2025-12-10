@@ -18,7 +18,7 @@ import com.yggdrasil.labs.infrastructure.persistence.dataobject.CustomerDO;
  * <p>注意：CustomerDO 中没有 sourceType 和 companyType 字段，这些字段仅存在于 Customer 实体中
  */
 @Mapper(componentModel = "spring")
-public interface CustomerConverter {
+public interface CustomerInfraConverter {
 
     /**
      * DO → Entity

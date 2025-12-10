@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
-import com.yggdrasil.labs.infrastructure.persistence.converter.CustomerConverter;
+import com.yggdrasil.labs.infrastructure.persistence.converter.CustomerInfraConverter;
 import com.yggdrasil.labs.infrastructure.persistence.dataobject.CustomerDO;
 import com.yggdrasil.labs.infrastructure.persistence.dataobject.mapper.CustomerMapper;
 
@@ -24,12 +24,12 @@ public class CustomerRepositoryImpl implements CustomerRepository {
 
     @Autowired private CustomerMapper customerMapper;
 
-    @Autowired private CustomerConverter customerConverter;
+    @Autowired private CustomerInfraConverter customerInfraConverter;
 
     @Override
     public Customer findById(String customerId) {
         CustomerDO customerDO = customerMapper.selectById(customerId);
-        return customerDO == null ? null : customerConverter.toEntity(customerDO);
+        return customerDO == null ? null : customerInfraConverter.toEntity(customerDO);
     }
 
     @Override
@@ -37,18 +37,18 @@ public class CustomerRepositoryImpl implements CustomerRepository {
         LambdaQueryWrapper<CustomerDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(CustomerDO::getCompanyName, name);
         List<CustomerDO> customerDOList = customerMapper.selectList(wrapper);
-        return customerConverter.toEntityList(customerDOList);
+        return customerInfraConverter.toEntityList(customerDOList);
     }
 
     @Override
     public void save(Customer customer) {
-        CustomerDO customerDO = customerConverter.toDO(customer);
+        CustomerDO customerDO = customerInfraConverter.toDO(customer);
         customerMapper.insert(customerDO);
     }
 
     @Override
     public void update(Customer customer) {
-        CustomerDO customerDO = customerConverter.toDO(customer);
+        CustomerDO customerDO = customerInfraConverter.toDO(customer);
         customerMapper.updateById(customerDO);
     }
 

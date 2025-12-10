@@ -14,7 +14,7 @@ import com.yggdrasil.labs.domain.customer.model.SourceType;
  * <p>负责将 Client 层的 Command 转换为 Domain 层的实体
  */
 @Mapper(componentModel = "spring")
-public interface CustomerConverter {
+public interface CustomerAppConverter {
 
     /**
      * CreateCustomerCmd → Customer Entity
