@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.1.1) (2025-12-10)
+
+
+### 📝 Documentation
+
+* 更新 依赖关系 ([02a5bdd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/02a5bdd334cfac0510f0b0af017a3c708bbc9596))
+
+
+### 🔧 Miscellaneous Chores
+
+* active profile local ([ae81e49](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ae81e49ded3f89a4a68599b091fe7aa3731bcc89))
+* bump version to 1.1.1-SNAPSHOT for next development cycle ([58117f6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/58117f60f2087738bc67291de202e7dba5a5fe30))
+
 ## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-10)
 
 
