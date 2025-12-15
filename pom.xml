@@ -189,10 +189,10 @@
                     </java>
                 </configuration>
                 <executions>
-                    <!-- 在 compile 阶段自动格式化代码（仅 dev profile） -->
+                    <!-- 在 process-sources 阶段自动格式化代码 -->
                     <execution>
                         <id>spotless-apply</id>
-                        <phase>compile</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>apply</goal>
                         </goals>
