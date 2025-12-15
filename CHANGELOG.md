@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2025-12-15)
+
+
+### ✨ Features
+
+* ✨ Feature: 支持容器化构建 ([c64e2a9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c64e2a96b50409ecbd75d84d59ed600a94b85f41)), closes [#33](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/33)
+
+
+### 🐛 Bug Fixes
+
+* 🐛 Bug: spotless apply应该在maven的process-sources阶段 ([3587828](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3587828834feb18e1cb82c9066b7e4a0f327ecaf)), closes [#34](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/34)
+
+
+### 📝 Documentation
+
+* 更新 依赖关系 ([02a5bdd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/02a5bdd334cfac0510f0b0af017a3c708bbc9596))
+
+
+### 👷 Continuous Integration
+
+* **deps:** bump googleapis/release-please-action from 4.2.0 to 4.4.0 ([7ec68a7](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7ec68a78fc81c3d33eef35e97b7b0c6bb976534a))
+* 修改判断逻辑，避免误升级 ([fb1e202](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/fb1e2029d3c5463f822dbdfa07c2efcc1424886d))
+
+
+### 🔧 Miscellaneous Chores
+
+* active profile local ([ae81e49](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ae81e49ded3f89a4a68599b091fe7aa3731bcc89))
+* bump version to 1.1.1-SNAPSHOT for next development cycle ([58117f6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/58117f60f2087738bc67291de202e7dba5a5fe30))
+
 ## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-10)
 
 
