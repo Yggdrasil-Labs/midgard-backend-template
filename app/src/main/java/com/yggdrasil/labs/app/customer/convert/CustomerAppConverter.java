@@ -3,7 +3,7 @@ package com.yggdrasil.labs.app.customer.convert;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
+import com.yggdrasil.labs.app.customer.dto.cmd.CreateCustomerCmd;
 import com.yggdrasil.labs.domain.customer.model.CompanyType;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.model.SourceType;

@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.cola.dto.Response;
 import com.yggdrasil.labs.app.customer.convert.CustomerAppConverter;
-import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
+import com.yggdrasil.labs.app.customer.dto.cmd.CreateCustomerCmd;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
 

@@ -13,11 +13,7 @@
     <name>app</name>
 
     <dependencies>
-        <!-- 应用层依赖对外契约（client）和领域层（domain），不直接依赖基础设施实现 -->
-        <dependency>
-            <groupId>com.yggdrasil.labs</groupId>
-            <artifactId>client</artifactId>
-        </dependency>
+        <!-- 应用层只依赖领域层（domain），不依赖 client 契约 -->
         <dependency>
             <groupId>com.yggdrasil.labs</groupId>
             <artifactId>domain</artifactId>

@@ -16,10 +16,10 @@ import com.alibaba.cola.dto.MultiResponse;
 import com.alibaba.cola.dto.Response;
 import com.yggdrasil.labs.adapter.web.convert.CustomerWebConverter;
 import com.yggdrasil.labs.adapter.web.request.CreateCustomerRequest;
-import com.yggdrasil.labs.client.api.CustomerClient;
-import com.yggdrasil.labs.client.dto.cmd.CreateCustomerCmd;
-import com.yggdrasil.labs.client.dto.co.CustomerCO;
-import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
+import com.yggdrasil.labs.app.customer.CustomerApplicationService;
+import com.yggdrasil.labs.app.customer.dto.cmd.CreateCustomerCmd;
+import com.yggdrasil.labs.app.customer.dto.co.CustomerCO;
+import com.yggdrasil.labs.app.customer.dto.query.ListCustomerQuery;
 
 /**
  * 客户管理 Controller
@@ -31,7 +31,7 @@ import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
 @RequestMapping("/customer")
 public class CustomerController {
 
-    @Resource private CustomerClient customerClient;
+    @Resource private CustomerApplicationService customerApplicationService;
     @Resource private CustomerWebConverter customerWebConverter;
 
     /**
@@ -46,7 +46,7 @@ public class CustomerController {
                     String name) {
         ListCustomerQuery query = new ListCustomerQuery();
         query.setName(name);
-        return customerClient.listCustomerByName(query);
+        return customerApplicationService.listCustomerByName(query);
     }
 
     /**
@@ -58,6 +58,6 @@ public class CustomerController {
     @PostMapping(value = "/add")
     public Response createCustomer(@Valid @RequestBody CreateCustomerRequest body) {
         CreateCustomerCmd cmd = customerWebConverter.toCreateCustomerCmd(body);
-        return customerClient.createCustomer(cmd);
+        return customerApplicationService.createCustomer(cmd);
     }
 }

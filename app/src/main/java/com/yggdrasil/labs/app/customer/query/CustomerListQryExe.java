@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.cola.dto.MultiResponse;
 import com.yggdrasil.labs.app.customer.assembler.CustomerAssembler;
-import com.yggdrasil.labs.client.dto.co.CustomerCO;
-import com.yggdrasil.labs.client.dto.query.ListCustomerQuery;
+import com.yggdrasil.labs.app.customer.dto.co.CustomerCO;
+import com.yggdrasil.labs.app.customer.dto.query.ListCustomerQuery;
 import com.yggdrasil.labs.domain.customer.model.Customer;
 import com.yggdrasil.labs.domain.customer.repository.CustomerRepository;
 
