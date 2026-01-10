@@ -41,9 +41,9 @@ Midgard（中庭）是基于 COLA 5.0 DDD 架构的微服务模板项目，用�
 
 | 层 | 职责 | 依赖 | 原则 |
 |---|------|------|------|
-| **Client** | 对外契约（API、DTO） | COLA 基础类 | 只定义不实现 |
-| **Adapter** | 协议适配（HTTP→Cmd/Query） | Client | 薄适配层，不含业务逻辑 |
-| **App** | 业务编排（流程控制） | Client + Domain | 不放规则，只做编排 |
+| **Client** | 外部协议契约（Dubbo/Feign 接口与协议专属 DTO） | COLA 基础类 | 只定义不实现，独立于内部层 |
+| **Adapter** | 协议适配（HTTP/RPC/MQ 等） | App | 薄适配层，不含业务逻辑 |
+| **App** | 业务编排（ApplicationService + CQRS 执行器） | Domain | 暴露 ApplicationService，委派执行器，不放规则 |
 | **Domain** | 业务规则（Entity、Repository 接口） | 无 | 规则中心，不依赖外部框架 |
 | **Infrastructure** | 技术实现（DO、Repository 实现） | Domain | 实现 Domain 接口（依赖倒置） |
 | **Start** | 启动配置 | 所有层 | 只做启动 + 配置 |
@@ -57,32 +57,27 @@ flowchart TD
     Start -->|依赖| Infrastructure[Infrastructure 基础设施层]
     Start -->|依赖| Domain[Domain 领域层]
     
-    Adapter -->|依赖| Client[Client 客户端层]
-    App -->|依赖| Client
+    Adapter -->|依赖| App[App 应用层]
     App -->|依赖| Domain
     Infrastructure -->|依赖| Domain
-    
+    Client[Client 外部契约层]:::optional
+
+    classDef optional fill:#e3f2fd,stroke:#90a4ae,stroke-dasharray: 5 5;
     style Domain fill:#e8f5e9
-    style Client fill:#e8f5e9
 ```
 
 ## 项目结构
 
 ### 各层子包说明
 
-#### Client 层（`client`）
+#### Client 层（`client`，外部协议契约，可选）
 
 | 子包 | 用途 | 命名规范 |
 |-----|------|---------|
-| `api` | 业务接口 | `{Domain}Client` |
-| `dto/cmd` | 命令对象（写） | `{Verb}{Domain}Cmd` |
-| `dto/query` | 查询对象（读） | `{Verb}{Domain}Query` |
-| `dto/co` | 客户对象（输出） | `{Domain}CO` |
-| `dto/enums` | 枚举、错误码 | `{Name}Enum`、`ErrorCode` |
+| `api` | 对外协议接口（如 Dubbo/Feign） | `{Domain}Client` |
+| `dto/*` | 协议专属 DTO（DubboRequest/FeignRequest 等） | 依协议命名 |
 
-**动词映射表**：
-- Command：`Create`、`Update`、`Modify`、`Add`、`Delete`、`Remove`
-- Query：`Get`、`Query`、`List`、`Page`、`Check`
+**注意**：内部编排 DTO 不放在 Client。
 
 #### Adapter 层（`adapter`）
 
@@ -99,12 +94,15 @@ flowchart TD
 | 子包 | 用途 | 命名规范 |
 |-----|------|---------|
 | `{aggregate}` | 聚合根业务包 | 小写聚合名（如 `customer`） |
+| `dto/cmd` | 命令对象（写） | `{Verb}{Domain}Cmd` |
+| `dto/query` | 查询对象（读） | `{Verb}{Domain}Query` |
+| `dto/co` | 客户对象（输出） | `{Domain}CO` |
+| `dto/enums` | 业务枚举 | `{Name}Enum`、`ErrorCode` |
+| `application` | ApplicationService 接口/实现 | `{Domain}ApplicationService` / `...Impl` |
 | `executor` | 命令/查询执行器 | `{Domain}{Action}CmdExe`、`{Domain}{Action}QryExe` |
 | `convert` | Cmd→Entity 转换器 | `{Domain}Converter` |
 | `assembler` | Entity→CO 组装器 | `{Domain}Assembler` |
 | `listener` | 事件监听器 | `{Domain}EventListener` |
-
-**Client 接口实现**：`{Domain}ClientImpl`
 
 #### Domain 层（`domain`）
 
@@ -130,7 +128,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     A[HTTP Request<br/>JSON] -->|Jackson| B[Request DTO]
-    B -->|WebConverter| C[Command/Query]
+    B -->|WebConverter| C[App Command/Query]
     C -->|Converter| D[Entity]
     D -->|Converter| E[DO]
     E -->|MyBatis-Plus| F[(Database)]
@@ -151,14 +149,14 @@ flowchart LR
 
 | 层 | 转换器 | 方向 | 工具 |
 |---|--------|------|------|
-| Adapter | `{Domain}WebConverter` | Request ↔ Cmd/Query | MapStruct |
+| Adapter | `{Domain}WebConverter` | Request ↔ App Cmd/Query | MapStruct |
 | App | `{Domain}Converter` | Cmd → Entity | MapStruct |
 | App | `{Domain}Assembler` | Entity → CO | MapStruct |
 | Infrastructure | `{Domain}Converter` | Entity ↔ DO | MapStruct |
 
 ### 参数校验
 
-1. **Client 层**：使用 JSR 303 注解（`@NotBlank`、`@Size`、`@Pattern`）
+1. **App 层 DTO**：使用 JSR 303 注解（`@NotBlank`、`@Size`、`@Pattern`）
 2. **Adapter 层**：使用 `@Validated` + `@Valid` 启用校验
 3. **Domain 层**：在 Entity 的 `validate()` 方法中校验业务规则
 
@@ -167,11 +165,13 @@ flowchart LR
 ### 开发流程
 
 ```bash
-# 1. Client 层 - 定义契约
-├── CustomerClient 接口
-├── CreateCustomerCmd（带校验注解）
-├── ListCustomerQuery
-└── CustomerCO
+# 1. App 层 - 定义编排入口与内部 DTO
+├── CustomerApplicationService / CustomerApplicationServiceImpl
+├── dto/cmd/CreateCustomerCmd（带校验注解）
+├── dto/query/ListCustomerQuery
+├── dto/co/CustomerCO
+├── executor/CustomerCreateCmdExe（@Transactional）
+└── executor/CustomerListQryExe
 
 # 2. Domain 层 - 定义模型
 ├── Customer Entity（含 validate() 方法）
@@ -182,17 +182,13 @@ flowchart LR
 ├── CustomerConverter（DO ↔ Entity）
 └── CustomerRepositoryImpl
 
-# 4. App 层 - 业务编排
-├── CustomerConverter（Cmd → Entity）
-├── CustomerAssembler（Entity → CO）
-├── CustomerCreateCmdExe（@Transactional）
-├── CustomerListQryExe
-└── CustomerClientImpl
-
-# 5. Adapter 层 - 协议适配
+# 4. Adapter 层 - 协议适配
 ├── CreateCustomerRequest
-├── CustomerWebConverter
-└── CustomerController（@Validated）
+├── CustomerWebConverter（Request → App Cmd）
+└── CustomerController（@Validated，注入 ApplicationService）
+
+# 5. Client 层（可选）- 对外协议契约
+└── Dubbo/Feign 接口与协议专属 DTO
 ```
 
 ## 常见问题
