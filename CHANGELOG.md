@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2026-01-26)
+
+
+### ✨ Features
+
+* ✨ Feature: 支持容器化构建 ([c64e2a9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c64e2a96b50409ecbd75d84d59ed600a94b85f41)), closes [#33](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/33)
+
+
+### 🐛 Bug Fixes
+
+* 🐛 Bug: spotless apply应该在maven的process-sources阶段 ([3587828](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3587828834feb18e1cb82c9066b7e4a0f327ecaf)), closes [#34](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/34)
+
+
+### 📝 Documentation
+
+* 新增 AI Agent 指令文档 (AGENTS.md)，定义 AI 行为规范和工作流程 ([04580fd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/04580fd7b7a35dc35267d1f9f7aead71639527e9))
+* 更新 README，调整各层职责和命名规范，明确 Client 层与 App 层的关系 ([b653e86](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b653e86ab76b74238d3261e373a941408d64a589))
+* 更新 依赖关系 ([02a5bdd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/02a5bdd334cfac0510f0b0af017a3c708bbc9596))
+
+
+### ♻️ Code Refactoring
+
+* 适配层重构，依赖关系调整为直接依赖应用层，更新相关DTO和命令类以支持新的架构 ([35a6eaf](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/35a6eafdc76423a7167ed200ee574455929c2731))
+
+
+### 👷 Continuous Integration
+
+* **deps:** bump googleapis/release-please-action from 4.2.0 to 4.4.0 ([7ec68a7](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7ec68a78fc81c3d33eef35e97b7b0c6bb976534a))
+* 修改判断逻辑，避免误升级 ([fb1e202](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/fb1e2029d3c5463f822dbdfa07c2efcc1424886d))
+
+
+### 🔧 Miscellaneous Chores
+
+* active profile local ([ae81e49](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ae81e49ded3f89a4a68599b091fe7aa3731bcc89))
+* bump version to 1.1.1-SNAPSHOT for next development cycle ([58117f6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/58117f60f2087738bc67291de202e7dba5a5fe30))
+* 升级parent到2.0.0，修改groupId ([abe6b2a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/abe6b2ab90a15d4a38c6ef24d17134eb8f56a283))
+
 ## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-10)
 
 
