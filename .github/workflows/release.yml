@@ -4,21 +4,64 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号（例如：1.2.3）。会自动使用 tag：v{version} 的代码执行。'
+        required: true
+        type: string
+      skip_docker:
+        description: '可选：跳过发布 Docker 镜像（GHCR）'
+        required: false
+        type: boolean
+        default: false
 
 env:
   MAVEN_OPTS: -Xmx1024m -XX:+UseG1GC
   JAVA_VERSION: '17'
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.vars.outputs.ref }}
+      tag: ${{ steps.vars.outputs.tag }}
+      version: ${{ steps.vars.outputs.version }}
+    steps:
+      - name: Resolve release tag/ref/version
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_VERSION="${{ inputs.version }}"
+            VERSION="${INPUT_VERSION#v}"
+            TAG="v${VERSION}"
+            REF="refs/tags/${TAG}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"
+            REF="${GITHUB_REF}"
+          fi
+
+          echo "Resolved ref: $REF"
+          echo "Resolved tag: $TAG"
+          echo "Resolved version: $VERSION"
+
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   build-verify:
     runs-on: ubuntu-latest
+    needs: [ prepare ]
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          # push 事件时，使用 github.ref（已经是 tag ref）
-          ref: ${{ github.ref }}
+          ref: ${{ needs.prepare.outputs.ref }}
           fetch-depth: 0
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
@@ -44,15 +87,14 @@ jobs:
 
   build-release:
     runs-on: ubuntu-latest
-    needs: [ build-verify ]
+    needs: [ prepare, build-verify ]
     permissions:
       contents: read
       packages: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          # push 事件时，使用 github.ref（已经是 tag ref）
-          ref: ${{ github.ref }}
+          ref: ${{ needs.prepare.outputs.ref }}
           fetch-depth: 0
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
@@ -73,19 +115,9 @@ jobs:
             exit 1
           fi
 
-      - name: Get version from tag
-        id: get_version
-        run: |
-          # 从 tag 获取版本号
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_NAME#v}  # 移除 'v' 前缀
-          echo "Tag: $TAG_NAME"
-          echo "Version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Update version in pom.xml for release
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           
           if [ -z "$VERSION" ]; then
             echo "Error: Version is empty"
@@ -130,7 +162,7 @@ jobs:
 
       - name: Flatten POM files before deploy
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           echo "Executing flatten:flatten to replace \${revision} variables with version: $VERSION"
           ./mvnw -B -U -Drevision=$VERSION flatten:flatten
           echo "Flatten completed. Verifying flattened POMs..."
@@ -145,41 +177,114 @@ jobs:
 
       - name: Build packages (jar files)
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           echo "Building packages with version: $VERSION"
           ./mvnw -B -U -DskipTests=true -Drevision=$VERSION \
             package
           echo "Verifying jar files were built..."
           find . -name "*.jar" -path "*/target/*" -not -path "*/original-*" | head -10
 
+  # ==================== Docker 镜像发布（GHCR） ====================
+  publish-docker-image:
+    runs-on: ubuntu-latest
+    needs: [ prepare, build-release ]
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_docker) }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Update version in pom.xml for docker build
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          echo "Updating pom.xml revision to: $VERSION"
+          sed -i "s|<revision>[^<]*</revision>|<revision>$VERSION</revision>|g" pom.xml
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.prepare.outputs.tag }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GITHUB_ACTOR=${{ github.actor }}
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            VERSION=${{ needs.prepare.outputs.version }}
+            REVISION=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.run_started_at }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output image info
+        run: |
+          echo "============================================"
+          echo "🐳 Docker 镜像发布成功！"
+          echo "============================================"
+          echo ""
+          echo "📦 镜像地址:"
+          echo "   ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}"
+          echo "   ghcr.io/${{ github.repository }}:latest"
+          echo ""
+          echo "🚀 拉取命令:"
+          echo "   docker pull ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}"
+          echo ""
+          echo "▶️  运行命令:"
+          echo "   docker run -d --name midgard-backend \\"
+          echo "     -p 8081:8081 -p 20880:20880 \\"
+          echo "     -e SPRING_PROFILES_ACTIVE=dev \\"
+          echo "     ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}"
+
   create-github-release:
     runs-on: ubuntu-latest
-    needs: [ build-release ]
+    needs: [ prepare, build-release, publish-docker-image ]
+    if: >-
+      ${{ always()
+        && needs.build-release.result == 'success'
+        && (needs.publish-docker-image.result == 'success' || needs.publish-docker-image.result == 'skipped')
+      }}
     permissions:
       contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ needs.prepare.outputs.ref }}
           fetch-depth: 0
-
-      - name: Get version from tag
-        id: get_version
-        run: |
-          # 从 tag 获取版本
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_NAME#v}  # 移除 'v' 前缀
-          echo "Tag: $TAG_NAME"
-          echo "Version: $VERSION"
-          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Extract release notes from CHANGELOG
         id: changelog
         run: |
-          TAG_NAME="${{ steps.get_version.outputs.tag }}"
-          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="${{ needs.prepare.outputs.tag }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
           
           # 默认 release notes（带图标）
           DEFAULT_NOTES="## 🚀 Release $VERSION
@@ -258,8 +363,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:
-          tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Release ${{ steps.get_version.outputs.version }}
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: Release ${{ needs.prepare.outputs.version }}
           body: ${{ steps.changelog.outputs.release_notes }}
           draft: false
           prerelease: false
@@ -269,7 +374,12 @@ jobs:
 
   update-dev-version:
     runs-on: ubuntu-latest
-    needs: [ build-release ]
+    needs: [ prepare, build-release, publish-docker-image ]
+    if: >-
+      ${{ always()
+        && needs.build-release.result == 'success'
+        && (needs.publish-docker-image.result == 'success' || needs.publish-docker-image.result == 'skipped')
+      }}
     permissions:
       contents: write
     steps:
@@ -282,12 +392,9 @@ jobs:
       - name: Get released version from tag
         id: get_version
         run: |
-          # 从 tag 获取版本
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          VERSION=${TAG_NAME#v}  # 移除 'v' 前缀
-          
-          # 获取 tag 指向的 commit SHA
-          TAG_SHA=$(git rev-parse $TAG_NAME^{commit})
+          TAG_NAME="${{ needs.prepare.outputs.tag }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG_SHA=$(git rev-parse $TAG_NAME^{commit} 2>/dev/null || git rev-parse HEAD)
           
           echo "Released version: $VERSION"
           echo "Tag: $TAG_NAME"
