@@ -8,11 +8,11 @@
 
 | 工作流文件 | 触发条件 | 职责 |
 |:---|:---|:---|
-| `ci.yml` | Push, PR | **持续集成**：代码格式检查 (Spotless)、编译构建、单元测试。 |
-| `release-please.yml` | Push to `main` | **发布提案**：分析 Commit 信息，自动更新 `CHANGELOG.md` 和 `pom.xml` (release版本)，生成 Pull Request。 |
-| `create-tag.yml` | Release PR 合并后 | **版本打标**：监听 Release Please PR 的合并，自动创建并推送 Git Tag (如 `v1.0.0`)。 |
-| `release.yml` | Tag 推送 (`v*`) | **正式发布**：Maven 构建发布包、Flatten POM、创建 GitHub Release、**自动升级下个快照版本**。 |
-| `sync-labels.yml` | 手动触发 | **标签同步**：同步 GitHub Issue/PR 的标签配置。 |
+| `ci.yml` | Push 到 `main`/`develop`，PR 到 `main` | **持续集成**：代码格式检查 (Spotless)、编译打包。Dependabot PR 仅做编译。 |
+| `release-please.yml` | Push 到 `main`、PR 事件（更新 Release PR）、手动触发 | **发布提案**：分析 Commit 信息，自动更新 `CHANGELOG.md`、`.release-please-manifest.json` 和 `pom.xml`（release 版本），生成 Pull Request。 |
+| `create-tag.yml` | Release Please 工作流完成后（检测到 Release PR 已合并）、或手动触发 | **版本打标**：从 manifest/CHANGELOG/pom 提取版本号，使用 `RELEASE_TOKEN` (PAT) 创建并推送 Git Tag（如 `v1.0.0`）。 |
+| `release.yml` | Tag 推送 `v*`、或手动触发（可填版本号、可选跳过 Docker） | **正式发布**：构建校验 → 更新 POM/Flatten → 打包 Jar → **发布 Docker 镜像 (GHCR)** → 创建 GitHub Release → **自动升级下个快照版本**。 |
+| `sync-labels.yml` | 手动触发 | **标签同步**：调用组织级可复用工作流，同步 GitHub Issue/PR 的标签配置。 |
 
 ## 🧩 自动化发布闭环逻辑
 
@@ -41,9 +41,10 @@ flowchart TD
     Tag -->|Trigger| Rel["🚀 Release Workflow"]
     
     subgraph ReleaseSteps ["Release Workflow 内部步骤"]
-        Verify["构建校验"] --> Flatten["Flatten POM<br/>解析变量"]
+        Verify["构建校验"] --> Flatten["更新 POM / Flatten<br/>解析变量"]
         Flatten --> Build["打包 Jar"]
-        Build --> GHRel["创建 GitHub Release<br/>上传构建产物"]
+        Build --> Docker["发布 Docker 镜像<br/>(GHCR)"]
+        Docker --> GHRel["创建 GitHub Release<br/>上传构建产物"]
         GHRel --> Bump["计算下个版本<br/>1.0.1-SNAPSHOT"]
     end
     
@@ -67,15 +68,16 @@ flowchart TD
     *   如果有 `fix` 提交，建议升级 Patch 版本 (1.0.0 -> 1.0.1)。
     *   机器人创建一个 Release PR，包含：
         *   更新后的 `CHANGELOG.md`
-        *   更新后的 `.release-please-manifest.json`
-        *   **更新后的 `pom.xml` (从 SNAPSHOT 改为正式版)**
+        *   更新后的 `.github/.release-please-manifest.json`
+        *   **更新后的 `pom.xml`（从 SNAPSHOT 改为正式版）**
 3.  **合并发布**：维护者 Review 并合并 Release PR。
-4.  **自动打标**：`create-tag` 工作流检测到 Release PR 被合并，提取版本号，使用 `RELEASE_TOKEN` (PAT) 推送 Git Tag。
-    *   *注意：必须使用 PAT 推送 Tag 才能触发后续的 GitHub Actions。*
-5.  **构建产物**：`release` 工作流被 Tag 触发：
-    *   将 `pom.xml` 中的 `${revision}` 替换为实际版本号 (Double check)。
-    *   使用 `flatten-maven-plugin` 生成解析后的 POM 文件。
-    *   构建并上传产物到 GitHub Release 页面。
+4.  **自动打标**：`create-tag` 在 Release Please 工作流完成后运行，若检测到本次为 Release PR 合并，则从 `.release-please-manifest.json`（优先）、`CHANGELOG.md` 或 `pom.xml` 提取版本号，使用 `RELEASE_TOKEN` (PAT) 创建并推送 Git Tag。支持 `workflow_dispatch` 手动重试。
+    *   *注意：必须使用 PAT 推送 Tag 才能触发后续的 Release 工作流。*
+5.  **构建与发布**：`release` 工作流被 Tag 触发（或手动触发并指定版本号）：
+    *   构建校验（格式检查、编译）。
+    *   将 `pom.xml` 中的 `${revision}` 替换为实际版本号，使用 `flatten-maven-plugin` 生成解析后的 POM。
+    *   打包 Jar，并**构建并推送 Docker 镜像到 GitHub Container Registry (GHCR)**。
+    *   创建 GitHub Release 并上传构建产物。
 6.  **迭代闭环**：`release` 工作流最后会自动计算下一个 SNAPSHOT 版本（如 `1.0.1-SNAPSHOT`），并直接 Push 到 `main` 分支，为下一轮开发做好准备。
 
 ## ✅ 最佳实践
@@ -123,3 +125,5 @@ flowchart TD
 2.  **手动删除** 远程和本地的 Git Tag（如 `v1.0.0`）。
 3.  Release Please 会在下一次运行时重新发现该版本未发布，保持 PR 开启或重新创建。
 4.  或者，手动修正代码后，手动打 Tag 推送来重新触发发布流程。
+
+`release` 工作流支持 **手动触发**（Actions → Release → Run workflow）：可填写版本号（如 `1.2.3`），将按该版本的 Tag 代码执行；可选「跳过发布 Docker 镜像」。
