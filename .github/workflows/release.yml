@@ -218,11 +218,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Normalize Docker image name
+        id: image
+        shell: bash
+        run: |
+          IMAGE_ID="ghcr.io/${{ github.repository }}"
+          IMAGE_ID="${IMAGE_ID,,}"
+          echo "Using image id: $IMAGE_ID"
+          echo "image=$IMAGE_ID" >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.image.outputs.image }}
           tags: |
             type=semver,pattern={{version}},value=${{ needs.prepare.outputs.tag }}
             type=raw,value=latest
@@ -251,11 +260,11 @@ jobs:
           echo "============================================"
           echo ""
           echo "📦 镜像地址:"
-          echo "   ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}"
-          echo "   ghcr.io/${{ github.repository }}:latest"
+          echo "   ${{ steps.image.outputs.image }}:${{ needs.prepare.outputs.version }}"
+          echo "   ${{ steps.image.outputs.image }}:latest"
           echo ""
           echo "🚀 拉取命令:"
-          echo "   docker pull ghcr.io/${{ github.repository }}:${{ needs.prepare.outputs.version }}"
+          echo "   docker pull ${{ steps.image.outputs.image }}:${{ needs.prepare.outputs.version }}"
           echo ""
           echo "▶️  运行命令:"
           echo "   docker run -d --name midgard-backend \\"
