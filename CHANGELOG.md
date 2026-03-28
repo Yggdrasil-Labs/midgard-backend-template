@@ -1,5 +1,64 @@
 # Changelog
 
+## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2026-03-28)
+
+
+### ✨ Features
+
+* ✨ Feature: 支持容器化构建 ([c64e2a9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c64e2a96b50409ecbd75d84d59ed600a94b85f41)), closes [#33](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/33)
+
+
+### 🐛 Bug Fixes
+
+* 🐛 Bug: spotless apply应该在maven的process-sources阶段 ([3587828](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3587828834feb18e1cb82c9066b7e4a0f327ecaf)), closes [#34](https://github.com/Yggdrasil-Labs/midgard-backend-template/issues/34)
+* 更新文件权限并改进 Dockerfile 以进行非 root 用户设置 ([a7a926f](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/a7a926fc7dc89a36348841afff0d30291c13d27e))
+
+
+### 📝 Documentation
+
+* 完善Agents规范 ([5b3c748](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/5b3c748b2ee8de18c5ad8ecc5ba9b673ffcedad5))
+* 将 OpenSpec 指令添加到 AGENTS.md，以获取 AI 助手关于提案和更改的指南 ([2769a8a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/2769a8a0e432a7d49751f2a0f3846709afaa02ba))
+* 新增 AI Agent 指令文档 (AGENTS.md)，定义 AI 行为规范和工作流程 ([04580fd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/04580fd7b7a35dc35267d1f9f7aead71639527e9))
+* 更新 README，调整各层职责和命名规范，明确 Client 层与 App 层的关系 ([b653e86](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b653e86ab76b74238d3261e373a941408d64a589))
+* 更新 依赖关系 ([02a5bdd](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/02a5bdd334cfac0510f0b0af017a3c708bbc9596))
+* 更新工作流文档，调整触发条件和步骤说明，增加 Docker 镜像发布支持 ([3fa59fb](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3fa59fb0d8484fe73e1af1fee7de8fe0ad16823b))
+
+
+### ♻️ Code Refactoring
+
+* 删除不再使用的客户适配器和相关类，更新包结构说明 ([ddc207a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ddc207a6078afb6b6f59434a221e27193efe5e5c))
+* 调整包结构为io.yggdrasil.labs.midgard ([37218f4](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/37218f496784bac89ffb0c1c3aec35d9c5448279))
+* 适配层重构，依赖关系调整为直接依赖应用层，更新相关DTO和命令类以支持新的架构 ([35a6eaf](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/35a6eafdc76423a7167ed200ee574455929c2731))
+
+
+### 👷 Continuous Integration
+
+* **deps:** bump actions/checkout from 6.0.1 to 6.0.2 ([5fca516](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/5fca516473d7b0bffbca695f6ad147e44ca2db2e))
+* **deps:** bump docker/build-push-action from 5 to 6 ([0dcfee4](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/0dcfee41535f2394ae27d90ac4480314de265951))
+* **deps:** bump docker/build-push-action from 6 to 7 ([9f1db25](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/9f1db25db9d21475f5587f3f2e7ea47bab3be87d))
+* **deps:** bump docker/login-action from 3 to 4 ([b387f0d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b387f0d912fff7dd4acf595fcfecf2e180917fbb))
+* **deps:** bump docker/metadata-action from 5 to 6 ([b01fa34](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b01fa342ff45380ad7ed0efc309ac5c548cbb55c))
+* **deps:** bump docker/setup-buildx-action from 3 to 4 ([74d9be1](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/74d9be142494180c884fe2c664fc654f00bf2968))
+* **deps:** bump docker/setup-qemu-action from 3 to 4 ([7889c81](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7889c81218352a52dfd88b7ccfb985e5d087ef08))
+* **deps:** bump googleapis/release-please-action from 4.2.0 to 4.4.0 ([7ec68a7](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7ec68a78fc81c3d33eef35e97b7b0c6bb976534a))
+* normalize Docker image name in release workflow ([4b9f42d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/4b9f42db4c9fd92e851ada87e36b7e2c48a8bc21))
+* **release:** 支持将镜像发布到gpr ([17911b4](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/17911b4bb445df63059e58ab718ce3b6dc0559ec))
+* 修改判断逻辑，避免误升级 ([fb1e202](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/fb1e2029d3c5463f822dbdfa07c2efcc1424886d))
+
+
+### 🔧 Miscellaneous Chores
+
+* active profile local ([ae81e49](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ae81e49ded3f89a4a68599b091fe7aa3731bcc89))
+* bump version to 1.1.1-SNAPSHOT for next development cycle ([58117f6](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/58117f60f2087738bc67291de202e7dba5a5fe30))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([7c79d1a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7c79d1a27256716f4eda07ee4731e79fd6594ef2))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([a57e5a7](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/a57e5a7d90b186854e98162656409cd5463f144a))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([404698f](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/404698f25234ac4c01457086d62a4c99620d3a29))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-bom ([29b6fc8](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/29b6fc88474ff168c1cdf3fee0c891678930b582))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-parent ([8e182aa](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/8e182aa5c4e9b2a07bb15f7daffeef544ca71cd4))
+* **deps:** 调整项目的依赖关系 ([bed5557](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/bed55571488fed8395a0f5baa0e4450202b9a955))
+* 升级parent到2.0.0，修改groupId ([abe6b2a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/abe6b2ab90a15d4a38c6ef24d17134eb8f56a283))
+* 更新依赖项的groupId为io.github.yggdrasil-labs，以统一命名规范 ([a5b845b](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/a5b845b0f037e6466c92b51f8d230f275aa00327))
+
 ## [1.1.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.0.0...v1.1.0) (2025-12-10)
 
 
