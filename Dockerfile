@@ -6,7 +6,7 @@
 # ============================================
 
 # -------------------- 构建阶段 --------------------
-FROM maven:3.9-eclipse-temurin-17-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 # GitHub Packages 认证
 ARG GITHUB_ACTOR
@@ -115,13 +115,17 @@ RUN --mount=type=cache,target=/root/.m2/repository \
     mvn clean package -DskipTests -Pci
 
 # -------------------- 运行阶段 --------------------
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 LABEL maintainer="YoungerYang-Y"
 LABEL description="Midgard Backend Template"
 
-# 创建非 root 用户
-RUN addgroup -S app && adduser -S app -G app
+# 安装运行时依赖，并创建非 root 用户
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --system app && \
+    useradd --system --gid app --create-home --home-dir /app app
 
 WORKDIR /app
 
