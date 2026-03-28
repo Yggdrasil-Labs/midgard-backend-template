@@ -21,14 +21,6 @@
         </dependency>
         <dependency>
             <groupId>io.github.yggdrasil-labs</groupId>
-            <artifactId>app</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.yggdrasil-labs</groupId>
-            <artifactId>domain</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.yggdrasil-labs</groupId>
             <artifactId>infrastructure</artifactId>
         </dependency>
 

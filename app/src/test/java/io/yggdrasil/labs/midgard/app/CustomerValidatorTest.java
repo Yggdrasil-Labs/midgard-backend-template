@@ -1,9 +1,9 @@
 package io.yggdrasil.labs.midgard.app;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CustomerValidatorTest {
+class CustomerValidatorTest {
 
     @Test
-    public void testValidation() {}
+    void testValidation() {}
 }
