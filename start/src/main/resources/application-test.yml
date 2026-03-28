@@ -1,8 +1,7 @@
 logging:
   level:
-    com.yggdrasil.labs.*: info
+    io.yggdrasil.labs.midgard.*: info
     root: info
 
 # 测试环境特定配置
 # 例如：数据库连接、Redis 等
-

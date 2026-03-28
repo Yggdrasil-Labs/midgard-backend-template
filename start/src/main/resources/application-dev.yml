@@ -7,9 +7,8 @@ spring:
 
 logging:
   level:
-    com.yggdrasil.labs.*: debug
+    io.yggdrasil.labs.midgard.*: debug
     root: info
 
 # 开发环境特定配置
 # 例如：数据库连接、Redis 等
-

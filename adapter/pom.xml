@@ -13,13 +13,13 @@
     <name>adapter</name>
 
     <dependencies>
-        <!-- 适配层依赖应用层 ApplicationService，直接编排业务调用 -->
+        <!-- 适配层依赖应用层 AppService，直接编排业务调用 -->
         <dependency>
             <groupId>io.github.yggdrasil-labs</groupId>
             <artifactId>app</artifactId>
         </dependency>
 
-        <!-- DTO 转换：使用 MapStruct 进行 Web Request ↔ Client Cmd 转换 -->
+        <!-- DTO 转换：使用 MapStruct 进行 Web Request ↔ App Cmd 转换 -->
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
