@@ -11,11 +11,8 @@
  *   <li>定义仓储接口（Repository Interface）
  * </ul>
  *
- * <p><b>包结构规范</b>：按照新的包结构规范，领域模型应位于 <code>io.yggdrasil.labs.midgard.domain.model</code>，领域服务应位于
- * <code>
- * io.yggdrasil.labs.midgard.domain.service</code>，仓储接口应位于 <code>
- * io.yggdrasil.labs.midgard.domain.repo
- * </code>。
+ * <p><b>骨架规范</b>：新项目应按领域在 <code>io.yggdrasil.labs.midgard.domain.{domain}</code> 下组织代码，典型子包为 <code>
+ * model</code>、<code>service</code>、<code>repo</code>。
  *
  * <p>这是 Midgard 模板项目的一部分，用于快速开始其他具体的业务项目。
  *

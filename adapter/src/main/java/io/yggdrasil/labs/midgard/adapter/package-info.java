@@ -12,12 +12,12 @@
  *   <li>调用 App 层服务并返回结果
  * </ul>
  *
- * <p><b>当前结构：</b>
+ * <p><b>骨架说明：</b>
  *
  * <ul>
- *   <li><b>web.customer</b>：Customer 领域的 REST 控制器、Request DTO 和 Web Convertor
- *   <li><b>mobile</b>：移动端适配器示例
- *   <li><b>wap</b>：WAP 端适配器示例
+ *   <li><b>web</b>：按领域组织 Web 适配代码，推荐结构为 `web.{domain}`
+ *   <li><b>mobile</b>：移动端适配器骨架
+ *   <li><b>wap</b>：WAP 端适配器骨架
  * </ul>
  *
  * <p><b>设计原则：</b>

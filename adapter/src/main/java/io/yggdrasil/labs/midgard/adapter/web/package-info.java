@@ -3,10 +3,10 @@
  *
  * <p>本包负责 HTTP 协议适配，是 Adapter 层对外暴露 Web 能力的入口。
  *
- * <p><b>当前结构：</b>
+ * <p><b>骨架说明：</b>
  *
  * <ul>
- *   <li><b>customer</b>：Customer 领域的 Web 控制器、请求 DTO 和对象转换器
+ *   <li>新项目应按领域在 <b>web.{domain}</b> 下创建 Controller、Request DTO 和 Web Convertor
  * </ul>
  *
  * <p><b>核心职责：</b>

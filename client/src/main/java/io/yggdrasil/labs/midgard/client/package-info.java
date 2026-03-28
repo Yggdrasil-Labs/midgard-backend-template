@@ -9,7 +9,7 @@
  *   <li>定义对外提供的业务接口（Client API）
  *   <li>定义数据传输对象（DTO）：Command、Query、CO
  *   <li>定义枚举类型和错误码
- *   <li>作为系统的对外契约，供 Adapter 层调用
+ *   <li>作为系统的对外契约，供外部集成方或 RPC/Feign 调用方使用
  * </ul>
  *
  * <p><b>包结构：</b>
@@ -47,7 +47,7 @@
  * <p><b>依赖关系：</b>
  *
  * <ul>
- *   <li><b>被依赖</b>：Adapter 层和 App 层依赖 Client 层
+ *   <li><b>被依赖</b>：外部调用方或需要共享契约的集成模块依赖 Client 层
  *   <li><b>依赖</b>：只依赖 COLA 框架的基础类（Command、Query、DTO、Response）
  *   <li><b>不依赖</b>：不依赖其他任何层（Start、Adapter、App、Domain、Infrastructure）
  * </ul>
