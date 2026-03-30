@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.2.0...v1.2.1) (2026-03-30)
+
+
+### 🔧 Miscellaneous Chores
+
+* bump version to 1.2.1-SNAPSHOT for next development cycle ([cbe68a5](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/cbe68a53f7cabe6cabcd691ccd95db1d6c5de7b5))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([eb61f6c](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/eb61f6ce3eefcc7f64631c6305cab08900aaaeb7))
+
 ## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
