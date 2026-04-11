@@ -1,0 +1,9 @@
+Title: uv Reference For LLMs
+Status: Not applicable by default
+
+Current repository facts:
+- Primary language is Java
+- Primary build tool is Maven
+- Python package manager uv is not part of the default development workflow
+
+If future tooling introduces Python-based generators, linters, or documentation scripts, this file can capture the supported uv workflow.

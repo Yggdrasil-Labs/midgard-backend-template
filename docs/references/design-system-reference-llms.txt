@@ -1,0 +1,14 @@
+Title: Design System Reference For LLMs
+Status: Placeholder
+
+This repository is a backend template and does not currently contain a frontend design system.
+
+Keep this file because the documentation map intentionally mirrors an agent-friendly structure.
+
+If frontend or console UI assets are introduced later, this file should summarize:
+- Design tokens
+- Component naming rules
+- Accessibility constraints
+- Screens or flows that matter for visual regression
+
+Until then, any agent should treat frontend design guidance as out of scope for core backend work.

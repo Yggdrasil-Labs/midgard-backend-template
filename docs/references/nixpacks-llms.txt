@@ -1,0 +1,14 @@
+Title: Nixpacks Reference For LLMs
+Status: Not in active use
+
+Current repository facts:
+- Build toolchain is Maven-based
+- Preferred command entry is ./mvnw
+- No Nixpacks config is present in the repository today
+
+If deployment later adopts Nixpacks, document here:
+- Build command
+- Start command
+- Java runtime assumptions
+- Environment variables
+- Cache or layer expectations
