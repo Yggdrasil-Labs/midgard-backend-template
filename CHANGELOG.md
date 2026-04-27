@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.1](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.2.0...v1.2.1) (2026-04-27)
+
+
+### 📝 Documentation
+
+* 更新文档结构，添加架构、设计、计划和质量评分指南 ([1357c00](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/1357c00b8a89ffe2cdb6116befc77f7a07cd34f6))
+
+
+### 👷 Continuous Integration
+
+* **deps:** bump actions/github-script from 8.0.0 to 9.0.0 ([d9ef58d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d9ef58da035826acbdaf4f4043819a719bcac91f))
+* **deps:** bump googleapis/release-please-action from 4.4.0 to 4.4.1 ([7c6223d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7c6223dc0a01afbddde2752e9174ba83811df41c))
+* **deps:** bump softprops/action-gh-release from 1 to 3 ([d195122](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d195122d414378513887d6123e4cc7e55afc3342))
+
+
+### 🔧 Miscellaneous Chores
+
+* bump version to 1.2.1-SNAPSHOT for next development cycle ([cbe68a5](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/cbe68a53f7cabe6cabcd691ccd95db1d6c5de7b5))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([eb61f6c](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/eb61f6ce3eefcc7f64631c6305cab08900aaaeb7))
+
 ## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
