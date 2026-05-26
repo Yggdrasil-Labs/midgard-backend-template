@@ -1,3 +1,7 @@
+---
+updated: 2026-05-26
+---
+
 # Product Sense
 
 Midgard 不是终端产品，而是后端模板。

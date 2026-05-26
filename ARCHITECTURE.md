@@ -1,3 +1,7 @@
+---
+updated: 2026-05-26
+---
+
 # Architecture Map
 
 本文件描述 Midgard Backend Template 的稳定架构事实，用来回答三个问题：
@@ -7,15 +11,15 @@
 3. 哪些约束属于模板长期不变的骨架。
 
 ## 1. 系统定位
+## 这个系统是什么？
 
-Midgard 是一个基于 COLA 5.0 的 DDD 后端服务模板，用于快速启动符合分层边界的 Spring Boot 微服务。
+Midgard 是一个基于 COLA 5.0 的 DDD 后端服务模板，用于快速启动符合分层边界的 Spring Boot 微服务。当前仓库是"工程骨架"而非"完整业务系统"。
 
-当前仓库更像“工程骨架”而不是“完整业务系统”，因此架构文档重点描述：
+## 业务领域
 
-- 分层职责
-- 包结构与命名
-- 对象流与依赖方向
-- 构建、运行、发布相关的工程约束
+业务领域划分独立维护在 `docs/DOMAINS.md`。
+
+## 2. 模块总览
 
 ## 2. 模块总览
 
@@ -219,7 +223,7 @@ infrastructure.config
 
 如果你需要：
 
-- 设计哲学：看 [docs/design-docs/core-beliefs.md](/home/yangyang/workspace/codes/Yggdrasil-Labs/midgard-backend-template/docs/design-docs/core-beliefs.md)
-- 计划与执行方式：看 [docs/PLANS.md](/home/yangyang/workspace/codes/Yggdrasil-Labs/midgard-backend-template/docs/PLANS.md)
-- 质量衡量：看 [docs/QUALITY_SCORE.md](/home/yangyang/workspace/codes/Yggdrasil-Labs/midgard-backend-template/docs/QUALITY_SCORE.md)
-- 可靠性与安全约束：看 [docs/RELIABILITY.md](/home/yangyang/workspace/codes/Yggdrasil-Labs/midgard-backend-template/docs/RELIABILITY.md) 与 [docs/SECURITY.md](/home/yangyang/workspace/codes/Yggdrasil-Labs/midgard-backend-template/docs/SECURITY.md)
+- 设计哲学：看 `docs/design-docs/core-beliefs.md`
+- 需求工作流：看 `docs/skills/project-workflow/SKILL.md`
+- 质量衡量：看 `docs/QUALITY_SCORE.md`
+- 可靠性与安全约束：看 `docs/RELIABILITY.md` 与 `docs/SECURITY.md`

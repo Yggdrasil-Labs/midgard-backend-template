@@ -1,3 +1,7 @@
+---
+updated: 2026-05-26
+---
+
 # Quality Score
 
 本文件是 Midgard 文档与工程骨架的质量评分卡。

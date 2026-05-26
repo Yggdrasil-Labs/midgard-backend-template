@@ -1,11 +1,10 @@
+---
+updated: 2026-05-26
+verified: 2026-05-26
+---
+
 # Core Beliefs
 
-状态：active
-
-适用范围：整个 Midgard Backend Template 的文档组织、协作方式与长期设计信念
-
-最后验证：2026-04-11，已与当前 `AGENTS.md`、`ARCHITECTURE.md` 和 `docs/` 结构对齐
-	
 本文件把 OpenAI 那篇“harness engineering”的核心思想翻译成适用于 Midgard 后端模板的长期信念。
 
 ## 1. 仓库是记录系统
