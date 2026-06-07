@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.cola.exception.BizException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,9 @@ public class CustomerController {
     public Map<String, Object> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
+        if (page < 1 || size < 1) {
+            throw new BizException("VALIDATION_ERROR", "page和size必须大于0");
+        }
         ListCustomerQry qry = new ListCustomerQry();
         qry.setPage(page);
         qry.setSize(Math.min(size, 100));
@@ -57,6 +61,9 @@ public class CustomerController {
     @PutMapping("/{id}")
     public CustomerCO update(
             @PathVariable Long id, @Valid @RequestBody UpdateCustomerRequest request) {
+        if (request.getName() == null && request.getEmail() == null && request.getPhone() == null) {
+            throw new BizException("VALIDATION_ERROR", "至少一个字段不能为空");
+        }
         UpdateCustomerCmd cmd = CONVERTOR.toCmd(request);
         cmd.setId(id);
         return customerAppService.update(cmd);

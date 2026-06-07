@@ -18,8 +18,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.alibaba.cola.exception.BizException;
 
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.CreateCustomerCmd;
+import io.yggdrasil.labs.midgard.app.customer.dto.cmd.UpdateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.co.CustomerCO;
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
+import io.yggdrasil.labs.midgard.domain.customer.model.CustomerStatus;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,5 +86,68 @@ class CustomerAppServiceImplTest {
         assertThrows(BizException.class, () -> service.create(cmd));
 
         verify(customerRepository, never()).save(any());
+    }
+
+    @Test
+    void getById_success() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setName("张三");
+        customer.setEmail("z@example.com");
+        customer.setStatus(CustomerStatus.ACTIVE);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(customer));
+
+        CustomerCO result = service.getById(1L);
+        assertEquals("张三", result.getName());
+    }
+
+    @Test
+    void getById_notFound() {
+        when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
+        BizException ex = assertThrows(BizException.class, () -> service.getById(999L));
+        assertTrue(ex.getErrCode().contains("NOT_FOUND"));
+    }
+
+    @Test
+    void update_success() {
+        Customer existing = new Customer();
+        existing.setId(1L);
+        existing.setName("张三");
+        existing.setEmail("z@example.com");
+        existing.setStatus(CustomerStatus.ACTIVE);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(customerRepository.update(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UpdateCustomerCmd cmd = new UpdateCustomerCmd();
+        cmd.setId(1L);
+        cmd.setName("李四");
+
+        CustomerCO result = service.update(cmd);
+        assertEquals("李四", result.getName());
+    }
+
+    @Test
+    void update_notFound() {
+        when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
+        UpdateCustomerCmd cmd = new UpdateCustomerCmd();
+        cmd.setId(999L);
+        cmd.setName("李四");
+        assertThrows(BizException.class, () -> service.update(cmd));
+    }
+
+    @Test
+    void delete_success() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(customer));
+        service.delete(1L);
+        verify(customerRepository).deleteById(1L);
+    }
+
+    @Test
+    void delete_notFound() {
+        when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
+        assertThrows(BizException.class, () -> service.delete(999L));
+        verify(customerRepository, never()).deleteById(any());
     }
 }
