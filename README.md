@@ -256,8 +256,9 @@ git clone <template-repo-url>
 # 3. 修改项目名
 # pom.xml: midgard-backend-template → your-service-name
 
-# 4. 配置环境
-# start/src/main/resources/application.yml
+# 4. 配置本地环境
+cp start/src/main/resources/application-local.yml.example start/src/main/resources/application-local.yml
+# 编辑 application-local.yml，填入本地数据库连接信息
 
 # 5. 启动项目
 ./mvnw spring-boot:run

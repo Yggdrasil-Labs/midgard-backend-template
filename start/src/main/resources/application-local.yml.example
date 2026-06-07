@@ -1,0 +1,14 @@
+# 本地开发配置示例
+# 使用方式：cp application-local.yml.example application-local.yml
+# 然后根据本地环境修改配置
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/midgard?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+
+logging:
+  level:
+    io.yggdrasil.labs.midgard: debug
