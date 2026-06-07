@@ -1,14 +1,16 @@
 package io.yggdrasil.labs.midgard.adapter.web.customer;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.alibaba.cola.exception.BizException;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import com.alibaba.cola.dto.PageResponse;
+import com.alibaba.cola.dto.Response;
+import com.alibaba.cola.dto.SingleResponse;
+import com.alibaba.cola.exception.BizException;
 
 import io.yggdrasil.labs.midgard.adapter.web.customer.convertor.CustomerWebConvertor;
 import io.yggdrasil.labs.midgard.adapter.web.customer.dto.CreateCustomerRequest;
@@ -29,49 +31,46 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerCO create(@Valid @RequestBody CreateCustomerRequest request) {
-        return customerAppService.create(CONVERTOR.toCmd(request));
+    public SingleResponse<CustomerCO> create(@Valid @RequestBody CreateCustomerRequest request) {
+        return SingleResponse.of(customerAppService.create(CONVERTOR.toCmd(request)));
     }
 
     @GetMapping("/{id}")
-    public CustomerCO getById(@PathVariable Long id) {
-        return customerAppService.getById(id);
+    public SingleResponse<CustomerCO> getById(@PathVariable Long id) {
+        return SingleResponse.of(customerAppService.getById(id));
     }
 
     @GetMapping
-    public Map<String, Object> list(
+    public PageResponse<CustomerCO> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         if (page < 1 || size < 1) {
             throw new BizException("VALIDATION_ERROR", "page和size必须大于0");
         }
+        int actualSize = Math.min(size, 100);
         ListCustomerQry qry = new ListCustomerQry();
         qry.setPage(page);
-        qry.setSize(Math.min(size, 100));
+        qry.setSize(actualSize);
         List<CustomerCO> records = customerAppService.list(qry);
         long total = customerAppService.count(qry);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", records);
-        result.put("total", total);
-        result.put("page", page);
-        result.put("size", qry.getSize());
-        return result;
+        return PageResponse.of(records, (int) total, actualSize, page);
     }
 
     @PutMapping("/{id}")
-    public CustomerCO update(
+    public SingleResponse<CustomerCO> update(
             @PathVariable Long id, @Valid @RequestBody UpdateCustomerRequest request) {
         if (request.getName() == null && request.getEmail() == null && request.getPhone() == null) {
             throw new BizException("VALIDATION_ERROR", "至少一个字段不能为空");
         }
         UpdateCustomerCmd cmd = CONVERTOR.toCmd(request);
         cmd.setId(id);
-        return customerAppService.update(cmd);
+        return SingleResponse.of(customerAppService.update(cmd));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public Response delete(@PathVariable Long id) {
         customerAppService.delete(id);
+        return Response.buildSuccess();
     }
 }
