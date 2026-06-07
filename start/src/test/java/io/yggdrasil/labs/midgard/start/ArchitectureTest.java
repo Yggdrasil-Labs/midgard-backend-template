@@ -16,6 +16,8 @@ class ArchitectureTest {
     static final ArchRule layerDependencies =
             layeredArchitecture()
                     .consideringAllDependencies()
+                    .layer("Start")
+                    .definedBy("..start..")
                     .layer("Adapter")
                     .definedBy("..adapter..")
                     .layer("App")
@@ -25,11 +27,13 @@ class ArchitectureTest {
                     .layer("Infrastructure")
                     .definedBy("..infrastructure..")
                     .whereLayer("Adapter")
-                    .mayOnlyBeAccessedByLayers("App")
+                    .mayOnlyBeAccessedByLayers("Start")
                     .whereLayer("App")
-                    .mayOnlyBeAccessedByLayers("Adapter")
+                    .mayOnlyBeAccessedByLayers("Adapter", "Start")
                     .whereLayer("Domain")
-                    .mayOnlyBeAccessedByLayers("App", "Infrastructure")
+                    .mayOnlyBeAccessedByLayers("App", "Infrastructure", "Start")
                     .whereLayer("Infrastructure")
+                    .mayOnlyBeAccessedByLayers("Start")
+                    .whereLayer("Start")
                     .mayNotBeAccessedByAnyLayer();
 }
