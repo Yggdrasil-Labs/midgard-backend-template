@@ -7,9 +7,8 @@
 ## 全局规范
 
 1. 项目约束优先于智能体默认行为。
-2. 项目级 skill（`docs/skills/`）优先于用户级 skill。
-3. Git 提交：`<type>(<scope>): <中文描述>`（Conventional Commits）。
-4. 优先使用 `./mvnw`；WSL 下需要 Node 时先执行 `source ~/.nvm/nvm.sh`。
+2. Git 提交：`<type>(<scope>): <中文描述>`（Conventional Commits）。
+3. 优先使用 `./mvnw`。
 
 ## 导航：我该去哪里找信息？
 
@@ -30,17 +29,12 @@
 ### C. 元规范（方法论）
 
 - 产品思维：`docs/PRODUCT_SENSE.md`
-- 需求工作流：`docs/skills/project-workflow/SKILL.md`
 - 质量评分：`docs/QUALITY_SCORE.md`
 
 ### D. 参考与产物
 
 - 外部参考（只读）：`docs/references/`
 - 自动生成文档（禁止手改）：`docs/generated/`
-
-### E. 项目级 Skills
-
-- 文档驱动迭代：`docs/skills/project-workflow/SKILL.md`
 
 ## 标准工作流（单任务）
 

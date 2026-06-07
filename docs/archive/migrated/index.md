@@ -1,20 +1,11 @@
-# Product Specs Index
+# Migrated Archive
 
-Midgard 当前是后端模板仓库，因此这里的“产品规格”更准确地说是“模板使用场景与关键旅程说明”。
+从旧文档结构迁移过来的归档文档。
 
-## 当前文档
+## 当前内容
 
-| 文档 | 状态 | 用途 |
-| --- | --- | --- |
-| `new-user-onboarding.md` | active | 描述一个新协作者如何从克隆仓库到完成首个模板扩展 |
-
-## 何时新增规格文档
-
-当仓库出现以下内容时，适合在本目录建文档：
-
-- 明确的业务能力模板
-- 可复用的端到端使用旅程
-- 对外契约或交付场景
-- 模板使用者需要遵循的功能性预期
-
-如果只是工程约束或架构约束，请放到 `design-docs/` 或顶层专题文档中。
+| 文档 | 说明 |
+|------|------|
+| `2026-03-27-midgard-template-standardization.md` | 模板标准化执行计划 |
+| `2026-03-27-midgard-template-standardization-design.md` | 模板标准化设计文档 |
+| `new-user-onboarding.md` | 新用户入门旅程 |

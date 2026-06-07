@@ -10,7 +10,6 @@ updated: 2026-05-26
 2. 层与层之间如何协作。
 3. 哪些约束属于模板长期不变的骨架。
 
-## 1. 系统定位
 ## 这个系统是什么？
 
 Midgard 是一个基于 COLA 5.0 的 DDD 后端服务模板，用于快速启动符合分层边界的 Spring Boot 微服务。当前仓库是"工程骨架"而非"完整业务系统"。
@@ -18,8 +17,6 @@ Midgard 是一个基于 COLA 5.0 的 DDD 后端服务模板，用于快速启动
 ## 业务领域
 
 业务领域划分独立维护在 `docs/DOMAINS.md`。
-
-## 2. 模块总览
 
 ## 2. 模块总览
 
@@ -125,47 +122,61 @@ Database -> DO -> Domain Entity -> CO -> Response
 
 ## 6. 推荐包结构
 
+### Client
+
+```text
+client.api                    ← 跨服务接口（Dubbo/Feign）
+client.dto.cmd                ← 协议级命令 DTO
+client.dto.qry                ← 协议级查询 DTO
+client.dto.co                 ← 协议级输出 DTO
+client.dto.enums              ← 业务枚举
+```
+
 ### Adapter
 
 ```text
-adapter.web.{domain}
-adapter.web.{domain}.dto
-adapter.web.{domain}.convertor
-adapter.rpc.provider
-adapter.mq.consumer
+adapter.web.{domain}          ← REST 控制器（已有）
+adapter.web.{domain}.dto      ← Web 请求对象（已有）
+adapter.web.{domain}.convertor ← 请求转换器（已有）
+adapter.mobile                ← 移动端适配（已有，占位）
+adapter.wap                   ← WAP 适配（已有，占位）
+adapter.rpc.provider          ← RPC 服务提供者（扩展位）
+adapter.mq.consumer           ← MQ 消息消费者（扩展位）
 ```
 
 ### App
 
 ```text
-{aggregate}
-{aggregate}.application
-{aggregate}.executor
-dto.cmd
-dto.qry
-dto.co
-dto.enums
-convertor
-assembler
+{aggregate}                   ← 聚合根业务包
+{aggregate}.application       ← AppService 接口/实现
+{aggregate}.executor          ← 命令/查询执行器
+{aggregate}.dto.cmd           ← 应用层命令 DTO
+{aggregate}.dto.qry           ← 应用层查询 DTO
+{aggregate}.dto.co            ← 应用层输出 DTO
+{aggregate}.dto.enums         ← 应用层枚举
+{aggregate}.convertor         ← Cmd→Entity 转换器
+{aggregate}.assembler         ← Entity→CO 组装器
+{aggregate}.listener          ← 事件监听器
+{aggregate}.scheduler         ← 定时任务
 ```
 
 ### Domain
 
 ```text
-{aggregate}.model
-{aggregate}.service
-{aggregate}.repository
-{aggregate}.event
+{aggregate}.model             ← 领域模型（Entity、VO）
+{aggregate}.service           ← 领域服务
+{aggregate}.repo              ← Repository 接口
+{aggregate}.event             ← 领域事件
 ```
 
 ### Infrastructure
 
 ```text
-infrastructure.persistence.dataobject
-infrastructure.persistence.convertor
-infrastructure.persistence.impl
-infrastructure.gateway
-infrastructure.config
+infrastructure.persistence.dataobject  ← 数据库对象（已有）
+infrastructure.persistence.convertor   ← DO↔Entity 转换器（已有）
+infrastructure.persistence.impl        ← Repository 实现（已有）
+infrastructure.gateway                 ← 第三方服务调用（扩展位）
+infrastructure.config                  ← 技术配置（扩展位）
 ```
 
 ## 7. 命名约束
@@ -224,6 +235,6 @@ infrastructure.config
 如果你需要：
 
 - 设计哲学：看 `docs/design-docs/core-beliefs.md`
-- 需求工作流：看 `docs/skills/project-workflow/SKILL.md`
+- 需求工作流：看 `docs/active/index.md`
 - 质量衡量：看 `docs/QUALITY_SCORE.md`
 - 可靠性与安全约束：看 `docs/RELIABILITY.md` 与 `docs/SECURITY.md`

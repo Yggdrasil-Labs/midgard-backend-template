@@ -5,4 +5,4 @@
 
 ## 如何添加新需求
 
-按 `docs/skills/project-workflow/SKILL.md` 的任务分级表判断级别，然后按其"场景 1：创建需求"流程执行。
+在本表新增一行，然后在 `docs/active/{需求名}/` 下按需创建 spec.md / design.md / plan.md。
