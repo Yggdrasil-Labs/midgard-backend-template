@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.yggdrasil.labs.mybatis.annotation.AutoMybatis;
 
-import io.github.yggdrasil.labs.mimir.mybatis.annotation.AutoMybatis;
 import lombok.Data;
 
 @Data

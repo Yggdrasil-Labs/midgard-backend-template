@@ -13,14 +13,14 @@ import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.convertor.CustomerInfraConvertor;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.CustomerDO;
-import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.CustomerDOMapper;
+import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.mapper.CustomerMapper;
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class CustomerRepositoryImpl implements CustomerRepository {
 
-    private final CustomerDOMapper customerMapper;
+    private final CustomerMapper customerMapper;
     private static final CustomerInfraConvertor CONVERTOR = CustomerInfraConvertor.INSTANCE;
 
     @Override

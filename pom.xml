@@ -62,20 +62,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!-- GitHub Packages 仓库（用于 mimir-boot 相关依赖）
-             注意：如果 mimir-boot-parent 在不同的仓库中，请根据实际情况修改 URL
-             格式：https://maven.pkg.github.com/OWNER/REPO -->
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/Yggdrasil-Labs/mimir-boot</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <dependencyManagement>
