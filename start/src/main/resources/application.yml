@@ -1,6 +1,9 @@
 spring:
   application:
     name: midgard-backend-template
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   profiles:
     active: local
 
