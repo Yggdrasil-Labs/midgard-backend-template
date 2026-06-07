@@ -68,7 +68,13 @@ public class CustomerAppServiceImpl implements CustomerAppService {
                         .findById(cmd.getId())
                         .orElseThrow(() -> new BizException("NOT_FOUND", "客户不存在"));
         if (cmd.getName() != null) customer.setName(cmd.getName());
-        if (cmd.getEmail() != null) customer.setEmail(cmd.getEmail());
+        if (cmd.getEmail() != null) {
+            if (!cmd.getEmail().equals(customer.getEmail())
+                    && customerRepository.existsByEmail(cmd.getEmail())) {
+                throw new BizException("DUPLICATE_EMAIL", "邮箱已被占用");
+            }
+            customer.setEmail(cmd.getEmail());
+        }
         if (cmd.getPhone() != null) customer.setPhone(cmd.getPhone());
         customer.validate();
         customerRepository.update(customer);

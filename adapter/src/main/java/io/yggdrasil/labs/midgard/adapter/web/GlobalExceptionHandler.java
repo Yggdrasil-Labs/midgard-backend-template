@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +18,7 @@ import com.alibaba.cola.exception.BizException;
 
 import io.yggdrasil.labs.midgard.adapter.web.dto.ErrorResponse;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -38,8 +41,23 @@ public class GlobalExceptionHandler {
                 .body(buildResponse("VALIDATION_ERROR", message, request));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        String message = "数据冲突";
+        if (ex.getMessage() != null && ex.getMessage().contains("idx_email")) {
+            message = "邮箱已被占用";
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(buildResponse("DUPLICATE_EMAIL", message, request));
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildResponse("DATA_CONFLICT", message, request));
+    }
+
     @ExceptionHandler(BizException.class)
     public ResponseEntity<ErrorResponse> handleBiz(BizException ex, HttpServletRequest request) {
+        log.warn("Business exception: [{}] {}", ex.getErrCode(), ex.getMessage());
         HttpStatus status = mapStatus(ex.getErrCode());
         return ResponseEntity.status(status)
                 .body(buildResponse(ex.getErrCode(), ex.getMessage(), request));
@@ -47,6 +65,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled exception at {}", request.getRequestURI(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(buildResponse("INTERNAL_ERROR", "服务内部错误", request));
     }
