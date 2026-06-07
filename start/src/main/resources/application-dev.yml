@@ -1,14 +1,11 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://8.xxx.xxx.8:3306/midgard
-    username: xxx
-    password: xxx
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:midgard}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
 
 logging:
   level:
     io.yggdrasil.labs.midgard.*: debug
     root: info
-
-# 开发环境特定配置
-# 例如：数据库连接、Redis 等

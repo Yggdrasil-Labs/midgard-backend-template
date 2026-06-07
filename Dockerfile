@@ -108,7 +108,7 @@ COPY . .
 
 # 先修复代码格式（解决 Windows CRLF 换行符问题）
 RUN --mount=type=cache,target=/root/.m2/repository \
-    mvn spotless:apply -B || true
+    mvn spotless:apply -B
 
 # 构建项目（使用缓存挂载）
 RUN --mount=type=cache,target=/root/.m2/repository \
@@ -138,7 +138,6 @@ USER app
 
 # 暴露端口
 EXPOSE 8081
-EXPOSE 20880
 
 # JVM 优化参数
 ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC -XX:MaxRAM=512m"

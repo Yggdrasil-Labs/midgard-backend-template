@@ -215,10 +215,10 @@
                             <skip>false</skip>
                         </configuration>
                     </execution>
-                    <!-- 在 validate 阶段执行格式检查（CI 环境） -->
+                    <!-- 在 verify 阶段执行格式检查（CI 环境） -->
                     <execution>
                         <id>spotless-check</id>
-                        <phase>validate</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
