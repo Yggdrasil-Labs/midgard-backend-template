@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import com.alibaba.cola.dto.PageResponse;
 import com.alibaba.cola.dto.Response;
 import com.alibaba.cola.dto.SingleResponse;
-import com.alibaba.cola.exception.BizException;
 
 import io.yggdrasil.labs.midgard.adapter.web.customer.convertor.CustomerWebConvertor;
 import io.yggdrasil.labs.midgard.adapter.web.customer.dto.CreateCustomerRequest;
@@ -44,9 +43,6 @@ public class CustomerController {
     public PageResponse<CustomerCO> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        if (page < 1 || size < 1) {
-            throw new BizException("VALIDATION_ERROR", "page和size必须大于0");
-        }
         int actualSize = Math.min(size, 100);
         ListCustomerQry qry = new ListCustomerQry();
         qry.setPage(page);
@@ -59,9 +55,6 @@ public class CustomerController {
     @PutMapping("/{id}")
     public SingleResponse<CustomerCO> update(
             @PathVariable Long id, @Valid @RequestBody UpdateCustomerRequest request) {
-        if (request.getName() == null && request.getEmail() == null && request.getPhone() == null) {
-            throw new BizException("VALIDATION_ERROR", "至少一个字段不能为空");
-        }
         UpdateCustomerCmd cmd = CONVERTOR.toCmd(request);
         cmd.setId(id);
         return SingleResponse.of(customerAppService.update(cmd));

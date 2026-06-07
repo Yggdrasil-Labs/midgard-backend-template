@@ -63,6 +63,9 @@ public class CustomerAppServiceImpl implements CustomerAppService {
     @Override
     @Transactional
     public CustomerCO update(UpdateCustomerCmd cmd) {
+        if (cmd.getName() == null && cmd.getEmail() == null && cmd.getPhone() == null) {
+            throw new BizException("VALIDATION_ERROR", "至少一个字段不能为空");
+        }
         Customer customer =
                 customerRepository
                         .findById(cmd.getId())

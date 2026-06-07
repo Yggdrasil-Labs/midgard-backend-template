@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +16,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import com.alibaba.cola.exception.BizException;
 
 import io.yggdrasil.labs.midgard.adapter.web.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice

@@ -1,18 +1,20 @@
 package io.yggdrasil.labs.midgard.infrastructure.persistence.impl;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Repository;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.convertor.CustomerInfraConvertor;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.CustomerDO;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.CustomerDOMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -37,8 +39,8 @@ public class CustomerRepositoryImpl implements CustomerRepository {
 
     @Override
     public List<Customer> findAll(int page, int size) {
-        Page<CustomerDO> pageResult = customerMapper.selectPage(
-                new Page<>(page, size), new LambdaQueryWrapper<>());
+        Page<CustomerDO> pageResult =
+                customerMapper.selectPage(new Page<>(page, size), new LambdaQueryWrapper<>());
         return pageResult.getRecords().stream()
                 .map(CONVERTOR::toEntity)
                 .collect(Collectors.toList());
@@ -64,6 +66,7 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     @Override
     public boolean existsByEmail(String email) {
         return customerMapper.selectCount(
-                new LambdaQueryWrapper<CustomerDO>().eq(CustomerDO::getEmail, email)) > 0;
+                        new LambdaQueryWrapper<CustomerDO>().eq(CustomerDO::getEmail, email))
+                > 0;
     }
 }
