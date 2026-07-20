@@ -1,5 +1,84 @@
 # Changelog
 
+## [1.3.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.2.0...v1.3.0) (2026-07-20)
+
+
+### ✨ Features
+
+* **adapter:** 添加全局异常处理和统一错误响应格式 ([85d53c0](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/85d53c0637111fc7fd9310979ec60f90b71572c6))
+* **customer:** 添加 Customer CRUD 示例聚合，展示完整 COLA 对象流 ([545b583](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/545b583c8811dce9ed5f5e597716de62910733d5))
+* **domain:** 补充 Customer 领域单测与文档同步 ([bcf8972](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/bcf897230501a48e7521f86c871bdb18a8478ffc))
+* **flyway:** 集成 Flyway 自动数据库迁移 ([01ac7e8](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/01ac7e8e28eccd0dc7e9cc7889c92ba0a8016700))
+* **openapi:** 集成 springdoc 自动生成 API 文档 ([edd3d9d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/edd3d9de0ad1df737048b7c820aa2b90f05f7978))
+
+
+### 🐛 Bug Fixes
+
+* **archunit:** 添加 Start 层定义，正确反映 ARCHITECTURE.md 分层约束 ([01b5761](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/01b5761733c12932dbcb0da0e34a07e415970035))
+* **customer:** 修复剩余 P1 问题 ([eae4ad9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/eae4ad9311f3393e1fc19fc5df6ff54f3be54046))
+* **customer:** 修复审查发现的 P1 问题 ([9457e55](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/9457e55e631c828079695b02690751248423c454))
+* **customer:** 修复深度审查 P0/P1 问题 ([c79564a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c79564a465b5720d28cc097cb3b25b964114470d))
+* **infra:** 修正 AutoMybatis 包名和生成的 Mapper 类名引用 ([685bd38](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/685bd38a9cea1589baa030488ab985aac058c81b))
+* **openapi:** springdoc 降级到 2.6.0 兼容 Spring Boot 3.3 ([8355025](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/835502552825cd4bfe435ac5b1d16ed3c88b7a1a))
+* **openapi:** 暂时移除 springdoc（2.8.x 与 Spring Framework 6.1 不兼容） ([f9b66b7](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/f9b66b7297040ead313d2f5e2551caf3742090c9))
+* **start:** 允许 bean 覆盖解决与 mimir-boot ExceptionAutoConfiguration 冲突 ([8bacaed](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/8bacaed226298c69baf997244dcabb356da3430e))
+* **start:** 添加 @MapperScan 扫描 AutoMybatis 生成的 Mapper ([0d41a5b](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/0d41a5bc264e67e8fb1149c79658f345f881fea0))
+* **start:** 添加 actuator 依赖、配置 server.port 并提供本地开发引导 ([7084052](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7084052b8fa4047699a8f14fcde87b9434b7db2a))
+
+
+### 📝 Documentation
+
+* **harness:** 迁移文档体系到 harness-docs 最佳实践标准 ([c231814](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c2318141018664ee8f11c0dc28ca81cbea71a50a))
+* 文档质量优化与结构治理 ([f14539c](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/f14539c27db3ed38088b306267ef735df176830a))
+* 更新文档结构，添加架构、设计、计划和质量评分指南 ([1357c00](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/1357c00b8a89ffe2cdb6116befc77f7a07cd34f6))
+
+
+### ♻️ Code Refactoring
+
+* **adapter:** Controller 返回值使用 COLA Response 包装 ([f432d49](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/f432d49bfb1364b2b1d57f1ea23e4892aec699d5))
+
+
+### ✅ Tests
+
+* **customer:** 添加 CustomerAppService 单元测试 ([5708ec4](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/5708ec4303a192238a620c5ebdb7ef3fb2a23127))
+* **integration:** 添加 Controller 单元测试和 Testcontainers 集成测试配置 ([5cc0dd2](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/5cc0dd276467db2cb0e8b4a73e82b2550eb9ad9c))
+
+
+### 👷 Continuous Integration
+
+* **backend:** 添加 test job，运行 ./mvnw verify ([e806be9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/e806be98eaba2c8d9f081e62546203ac798aaed4))
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.0 ([f0ee373](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/f0ee3739af4d605d70fcaa206ee928060d33c336))
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.0 ([3d18760](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/3d18760028f08bac9e78ee05e6a9b2b3ecafa169))
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.0 ([b330d4a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/b330d4a6f9073fe1f1f3fd952336e6151b19b9be))
+* **deps:** bump actions/checkout from 6.0.2 to 7.0.0 ([14cd138](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/14cd1380d194cdd03fdc0a4615d833119a5fb1ea))
+* **deps:** bump actions/github-script from 8.0.0 to 9.0.0 ([d9ef58d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d9ef58da035826acbdaf4f4043819a719bcac91f))
+* **deps:** bump googleapis/release-please-action from 4.4.0 to 4.4.1 ([7c6223d](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7c6223dc0a01afbddde2752e9174ba83811df41c))
+* **deps:** bump googleapis/release-please-action from 4.4.1 to 5.0.0 ([0fccb13](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/0fccb130d89437a41956245855d89365de6cbd19))
+* **deps:** bump googleapis/release-please-action from 4.4.1 to 5.0.0 ([ca16ad9](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ca16ad92229e26126d2dd037eaa48b8a5f4c7340))
+* **deps:** bump softprops/action-gh-release from 1 to 3 ([d195122](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d195122d414378513887d6123e4cc7e55afc3342))
+* **deps:** bump softprops/action-gh-release from 3.0.0 to 3.0.1 ([bd81389](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/bd813896cc7ce47eae6b2db066063aa09fe64362))
+* **deps:** bump softprops/action-gh-release from 3.0.0 to 3.0.1 ([9941919](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/9941919ae07c1723c9e33df6dbb6110f8a809a99))
+
+
+### 🔧 Miscellaneous Chores
+
+* **backend:** 迭代3工程规范改善（ArchUnit/CORS/logback/Dockerfile） ([0575dd2](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/0575dd2969c911b67ef559e67aa18c16049eb0a9))
+* bump version to 1.2.1-SNAPSHOT for next development cycle ([cbe68a5](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/cbe68a53f7cabe6cabcd691ccd95db1d6c5de7b5))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([d16c29f](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/d16c29f776aa6602a1b5c23a47701a701155a068))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin ([eb61f6c](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/eb61f6ce3eefcc7f64631c6305cab08900aaaeb7))
+* **deps-dev:** bump com.diffplug.spotless:spotless-maven-plugin from 3.4.0 to 3.8.0 ([669ee96](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/669ee9654d18b8109904eeed890c90f85310b9dc))
+* **deps-dev:** bump com.tngtech.archunit:archunit-junit5 ([0e181ef](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/0e181ef17519ea361bf30ff219839aaa6a9f52b3))
+* **deps-dev:** bump com.tngtech.archunit:archunit-junit5 from 1.3.0 to 1.4.2 ([7883437](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/7883437c6cc5697cd68af936e68b2e782a3672ef))
+* **deps-dev:** bump org.testcontainers:junit-jupiter ([96bd6ab](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/96bd6abfc15e4bbbdd6fdc6061fdc3ff17ff17c2))
+* **deps-dev:** bump org.testcontainers:junit-jupiter from 1.20.4 to 1.21.4 ([fda4008](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/fda4008ce4359f701479d9610801b02ed12157f3))
+* **deps-dev:** bump org.testcontainers:mysql from 1.20.4 to 1.21.4 ([6d85c72](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/6d85c72dc68e8f85be91ea3d0bb9264bb1ab05ae))
+* **deps-dev:** bump org.testcontainers:mysql from 1.20.4 to 1.21.4 ([31b227a](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/31b227a89740a5f1bbacb503bead9378e41c57ae))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-bom ([6258261](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/62582616583561190d0a4c877406e0c26041860b))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-bom from 2.0.4 to 2.1.0 ([ce60728](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/ce607288c1116123bc4233a642f87a8193835cdf))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-parent ([c876ff1](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/c876ff1961d468df6f7d771ee9f39360f1af010a))
+* **deps:** bump io.github.yggdrasil-labs:mimir-boot-parent from 2.0.4 to 2.1.0 ([20ab360](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/20ab360ea99453719208c0a69816c82388ab3091))
+* 忽略 start/logs 目录 ([abc4169](https://github.com/Yggdrasil-Labs/midgard-backend-template/commit/abc41698a53201aa4fc7fe5adb75afaa0725b45a))
+
 ## [1.2.0](https://github.com/Yggdrasil-Labs/midgard-backend-template/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
