@@ -40,16 +40,10 @@ public class CustomerController {
     }
 
     @GetMapping
-    public PageResponse<CustomerCO> list(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        int actualSize = Math.min(size, 100);
-        ListCustomerQry qry = new ListCustomerQry();
-        qry.setPage(page);
-        qry.setSize(actualSize);
+    public PageResponse<CustomerCO> list(@Valid @ModelAttribute ListCustomerQry qry) {
         List<CustomerCO> records = customerAppService.list(qry);
         long total = customerAppService.count(qry);
-        return PageResponse.of(records, (int) total, actualSize, page);
+        return PageResponse.of(records, (int) total, qry.getSize(), qry.getPage());
     }
 
     @PutMapping("/{id}")

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -24,6 +25,7 @@ import io.yggdrasil.labs.midgard.adapter.web.customer.dto.CreateCustomerRequest;
 import io.yggdrasil.labs.midgard.app.customer.application.CustomerAppService;
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.CreateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.co.CustomerCO;
+import io.yggdrasil.labs.midgard.app.customer.dto.qry.ListCustomerQry;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerControllerTest {
@@ -83,9 +85,30 @@ class CustomerControllerTest {
         when(customerAppService.list(any())).thenReturn(java.util.List.of());
         when(customerAppService.count(any())).thenReturn(0L);
 
-        PageResponse<CustomerCO> result = controller.list(1, 10);
+        ListCustomerQry qry = new ListCustomerQry();
+        qry.setPage(1);
+        qry.setSize(10);
+        PageResponse<CustomerCO> result = controller.list(qry);
 
         assertNotNull(result);
+    }
+
+    @Test
+    void list_withFilters_forwardsQueryCriteria() {
+        when(customerAppService.list(any())).thenReturn(java.util.List.of());
+        when(customerAppService.count(any())).thenReturn(0L);
+
+        ListCustomerQry qry = new ListCustomerQry();
+        qry.setPage(1);
+        qry.setSize(10);
+        qry.setKeyword("needle");
+        qry.setStatus("ACTIVE");
+        controller.list(qry);
+
+        ArgumentCaptor<ListCustomerQry> captor = ArgumentCaptor.forClass(ListCustomerQry.class);
+        verify(customerAppService).list(captor.capture());
+        assertEquals("needle", captor.getValue().getKeyword());
+        assertEquals("ACTIVE", captor.getValue().getStatus());
     }
 
     @Test

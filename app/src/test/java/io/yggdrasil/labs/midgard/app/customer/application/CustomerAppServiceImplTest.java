@@ -20,6 +20,7 @@ import com.alibaba.cola.exception.BizException;
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.CreateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.UpdateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.co.CustomerCO;
+import io.yggdrasil.labs.midgard.app.customer.dto.qry.ListCustomerQry;
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.model.CustomerStatus;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
@@ -106,6 +107,22 @@ class CustomerAppServiceImplTest {
         when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
         BizException ex = assertThrows(BizException.class, () -> service.getById(999L));
         assertTrue(ex.getErrCode().contains("NOT_FOUND"));
+    }
+
+    @Test
+    void list_withFilters_forwardsQueryCriteriaToRepository() {
+        ListCustomerQry qry = new ListCustomerQry();
+        qry.setPage(2);
+        qry.setSize(20);
+        qry.setKeyword("needle");
+        qry.setStatus("ACTIVE");
+        when(customerRepository.findAll(2, 20, "needle", "ACTIVE")).thenReturn(java.util.List.of());
+
+        service.list(qry);
+        service.count(qry);
+
+        verify(customerRepository).findAll(2, 20, "needle", "ACTIVE");
+        verify(customerRepository).count("needle", "ACTIVE");
     }
 
     @Test

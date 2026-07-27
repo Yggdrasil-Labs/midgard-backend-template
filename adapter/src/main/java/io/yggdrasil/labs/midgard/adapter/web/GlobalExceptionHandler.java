@@ -41,6 +41,17 @@ public class GlobalExceptionHandler {
                 .body(buildResponse("VALIDATION_ERROR", message, request));
     }
 
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleBindException(
+            BindException ex, HttpServletRequest request) {
+        String message =
+                ex.getBindingResult().getFieldErrors().stream()
+                        .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                        .collect(Collectors.joining("; "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildResponse("VALIDATION_ERROR", message, request));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException ex, HttpServletRequest request) {

@@ -50,14 +50,16 @@ public class CustomerAppServiceImpl implements CustomerAppService {
 
     @Override
     public List<CustomerCO> list(ListCustomerQry qry) {
-        return customerRepository.findAll(qry.getPage(), qry.getSize()).stream()
+        return customerRepository
+                .findAll(qry.getPage(), qry.getSize(), qry.getKeyword(), qry.getStatus())
+                .stream()
                 .map(ASSEMBLER::toClientObject)
                 .collect(Collectors.toList());
     }
 
     @Override
     public long count(ListCustomerQry qry) {
-        return customerRepository.count();
+        return customerRepository.count(qry.getKeyword(), qry.getStatus());
     }
 
     @Override

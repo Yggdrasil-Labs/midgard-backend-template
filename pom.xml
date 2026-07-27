@@ -110,6 +110,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Spring Boot 3.3.x 与 springdoc 2.6.x 兼容。 -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>2.6.0</version>
+            </dependency>
+
             <!--Validation API-->
             <dependency>
                 <groupId>jakarta.validation</groupId>

@@ -38,17 +38,33 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     }
 
     @Override
-    public List<Customer> findAll(int page, int size) {
-        Page<CustomerDO> pageResult =
-                customerMapper.selectPage(new Page<>(page, size), new LambdaQueryWrapper<>());
+    public List<Customer> findAll(int page, int size, String keyword, String status) {
+        LambdaQueryWrapper<CustomerDO> query =
+                buildQueryWrapper(keyword, status).orderByDesc(CustomerDO::getId);
+        Page<CustomerDO> pageResult = customerMapper.selectPage(new Page<>(page, size), query);
         return pageResult.getRecords().stream()
                 .map(CONVERTOR::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public long count() {
-        return customerMapper.selectCount(new LambdaQueryWrapper<>());
+    public long count(String keyword, String status) {
+        return customerMapper.selectCount(buildQueryWrapper(keyword, status));
+    }
+
+    private LambdaQueryWrapper<CustomerDO> buildQueryWrapper(String keyword, String status) {
+        LambdaQueryWrapper<CustomerDO> query = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isBlank()) {
+            query.and(
+                    wrapper ->
+                            wrapper.like(CustomerDO::getName, keyword)
+                                    .or()
+                                    .like(CustomerDO::getEmail, keyword));
+        }
+        if (status != null && !status.isBlank()) {
+            query.eq(CustomerDO::getStatus, status);
+        }
+        return query;
     }
 
     @Override
