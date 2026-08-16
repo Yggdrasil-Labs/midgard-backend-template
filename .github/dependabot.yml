@@ -40,6 +40,9 @@ updates:
       # Java 版本相关更新
       - dependency-name: "org.apache.maven.plugins:maven-compiler-plugin"
         update-types: ["version-update:semver-major"]
+      # springdoc 3.x 要求 Spring Boot 3.4+，与本模板 Boot 3.3 不兼容（见 PR #79）
+      - dependency-name: "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+        update-types: ["version-update:semver-major"]
     # 允许的更新类型
     allow:
       - dependency-type: "direct"
