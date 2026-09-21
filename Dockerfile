@@ -129,8 +129,8 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# 从构建阶段复制 JAR 文件（排除 original-*.jar，只复制 Spring Boot 打包的 fat JAR）
-COPY --from=builder /build/start/target/start-*.jar app.jar
+# 从构建阶段复制 Spring Boot 可执行 fat JAR（-exec classifier，见 start/pom.xml）
+COPY --from=builder /build/start/target/start-*-exec.jar app.jar
 
 # 设置文件权限
 RUN chown -R app:app /app

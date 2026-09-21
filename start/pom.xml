@@ -76,10 +76,20 @@
 
     <build>
         <plugins>
+            <!-- 可执行 fat jar：repackage 执行继承自 mimir-boot-parent 的 pluginManagement（版本 3.3.13，排除 lombok）。
+                 使用 exec classifier 生成独立的 -exec.jar，保留主构件薄 jar——否则 fat jar 替换主构件后
+                 failsafe 集成测试的类路径会被破坏（@SpringBootTest 合并注解解析失败）。 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.5.6</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <goals>
