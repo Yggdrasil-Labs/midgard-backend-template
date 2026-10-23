@@ -12,6 +12,11 @@
     <packaging>jar</packaging>
     <name>client</name>
 
+    <properties>
+        <!-- 当前仅有 package-info.java；新增公开契约类型后移除此配置，恢复 Javadoc 生成。 -->
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.alibaba.cola</groupId>
