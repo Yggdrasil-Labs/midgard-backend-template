@@ -1,5 +1,5 @@
 ---
-updated: 2026-07-10
+updated: 2026-10-24
 ---
 
 # 业务领域划分
@@ -30,7 +30,8 @@ updated: 2026-07-10
 ### 数据库映射
 
 - 表名：`customer`
-- 迁移脚本：`V1__create_customer.sql`
+- 当前运行迁移：[Start 模块的 V1](../start/src/main/resources/db/migration/V1__create_customer.sql)，由 Flyway 的 `classpath:db/migration` 加载
+- 根目录另有[迁移副本](../db/migration/V1__create_customer.sql)，目前尚未确定唯一维护源
 - 唯一约束：email（idx_email）
 - 索引：status（idx_status）
 
@@ -40,10 +41,12 @@ updated: 2026-07-10
 |----|------|------|
 | domain | ✅ 完成 | Entity + VO + Repository 接口 + 业务规则 |
 | infrastructure | ✅ 完成 | Repository 实现 + DO + InfraConvertor |
-| app | ✅ 完成 | AppService + CmdExe/QryExe + DTO |
+| app | 已实现 | AppService + Cmd/Qry/CO + Convertor/Assembler；当前未拆分 CmdExe/QryExe |
 | adapter | ✅ 完成 | REST Controller + Request DTO + Convertor |
-| client | ✅ 完成 | 跨服务契约 DTO |
+| client | 预留 | 当前只有 package-info，尚无跨服务接口与契约 DTO |
 | 迁移 | ✅ 完成 | Flyway V1 脚本就位 |
+
+表中状态仅描述源码落点，不代表集成测试或端到端验收已通过。
 
 ## 领域间关系
 

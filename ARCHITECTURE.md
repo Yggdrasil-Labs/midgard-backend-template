@@ -1,5 +1,5 @@
 ---
-updated: 2026-05-26
+updated: 2026-10-24
 ---
 
 # Architecture Map
@@ -222,11 +222,7 @@ infrastructure.config                  ← 技术配置（扩展位）
 - 优先使用 `./mvnw`
 - Spotless 负责 Java 格式统一
 
-常见验证：
-
-- 全量校验：`./mvnw clean verify`
-- 启动：`./mvnw spring-boot:run -pl start -am`
-- 指定 profile：`./mvnw -Pdev clean verify`
+开发步骤、常用命令及验证范围见[开发指南](docs/engineering/development.md)，模板启动方式见 [README](README.md)。
 
 ## 10. 文档和架构的关系
 
@@ -234,7 +230,8 @@ infrastructure.config                  ← 技术配置（扩展位）
 
 如果你需要：
 
+- 文档地图与文件归属：看[文档总索引](docs/index.md)与[治理规范](docs/standards/documentation-governance.md)
 - 设计哲学：看 `docs/design-docs/core-beliefs.md`
 - 需求工作流：看 `docs/active/index.md`
-- 质量衡量：看 `docs/QUALITY_SCORE.md`
+- 质量证据与当前缺口：看[开发指南](docs/engineering/development.md)与[技术债清单](docs/active/tech-debt-tracker.md)
 - 可靠性与安全约束：看 `docs/RELIABILITY.md` 与 `docs/SECURITY.md`

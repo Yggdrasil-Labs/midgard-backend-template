@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-23
+updated: 2026-10-24
 ---
 
 # Tech Debt Tracker
@@ -104,13 +104,13 @@ updated: 2026-10-23
 
 ### TD-001：文档事实漂移且缺少一致性检查
 
-**证据与影响**：[DOMAINS](../DOMAINS.md) 将 client 契约 DTO、App CmdExe/QryExe 标为完成，但 [client 源码](../../client/src/main/java) 只有 package-info，Customer 应用实现集中在 AppService；[质量评分卡](../QUALITY_SCORE.md) 仍称 db-schema 是占位文件，实际该文件不存在。[现有 CI](../../.github/workflows/ci.yml) 也没有文档索引、路径及状态检查。
+**证据与进展**：此前 [DOMAINS](../DOMAINS.md) 将尚不存在的 client 契约 DTO、App CmdExe/QryExe 标为完成，旧评分卡也误称 db-schema 是占位文件。2026-10-24 的[文件约束与项目纪律优化](../design-docs/arch-project-discipline.md)已纠正实现状态、淘汰陈旧评分卡，并补充文档总索引、文件归属和维护规则。原记录中的持续自动检查缺口未在本轮处理；本轮未复核 CI，本条保持开放。
 
-**下一步与关闭条件**：先对齐实现状态和生成文档登记，再增加最小链接/索引检查；语义状态需结合源码人工复核，不能仅依赖 Markdown lint。所有当前文档中的“已实现”应能定位到实际代码，新增失效链接应被检查拒绝。
+**下一步与关闭条件**：补齐最小链接/索引检查，持续核对文档状态；语义需结合源码人工复核，不能仅依赖 Markdown lint。所有当前文档中的“已实现”应能定位到实际代码，新增失效链接应被检查拒绝。本轮局部文档验证不等于已有持续自动检查。
 
 ### TD-002：数据库结构参考文档缺失
 
-**证据与影响**：[生成文档注册表](../generated/index.md) 登记了 `db-schema.md`，但 `docs/generated/db-schema.md` 实际不存在；Customer 迁移和 DO 已存在。旧“人工模板、等待脚本稳定”的描述已不准确。
+**证据与进展**：数据库结构参考文档仍不存在，Customer 迁移和 DO 已存在。原有虚列产物的空索引已移除，[文档治理](../standards/documentation-governance.md#生成文档)明确有实际产物后才登记；本轮尚未实现生成方式，本条保持开放。
 
 **下一步与关闭条件**：在 TD-012 明确迁移来源后，由实际生效的迁移生成表、字段、约束及索引说明，记录生成命令并可重复生成。不得手工补一个长期漂移的 schema 副本；生成结果应与迁移一致。
 

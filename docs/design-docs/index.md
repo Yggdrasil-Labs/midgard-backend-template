@@ -5,6 +5,7 @@
 | id | 主题 | status | owner | 适用范围 | 路径 |
 |----|------|--------|-------|----------|------|
 | design-core-beliefs | 核心工程信条 | verified | — | 全仓库 | `core-beliefs.md` |
+| arch-project-discipline | 文件约束与项目纪律 | verified | 项目维护者 | 文件归属、文档与协作纪律 | [RFC](arch-project-discipline.md) |
 
 ## status 含义
 

@@ -28,17 +28,19 @@ cp start/src/main/resources/application-local.yml.example start/src/main/resourc
 ## 开发命令
 
 ```bash
-./mvnw clean verify                    # 全量校验
+./mvnw clean verify                    # 构建与测试生命周期
 ./mvnw spring-boot:run -pl start -am   # 启动服务
 ./mvnw -Pdev clean verify              # 指定 profile
 ```
+
+环境、命令的实际验证范围和交付纪律见[开发指南](docs/engineering/development.md)。
 
 ## 模块结构
 
 | 模块 | 角色 |
 |------|------|
-| `client` | 外部契约层（Dubbo/Feign 接口与 DTO） |
-| `adapter` | 协议适配层（HTTP、RPC、MQ 入站） |
+| `client` | 外部契约预留层（当前仅有包结构，尚无跨服务接口与 DTO） |
+| `adapter` | 协议适配层（当前已有 Customer HTTP 接口，其他协议按需扩展） |
 | `app` | 应用层（用例编排、事务边界） |
 | `domain` | 领域层（业务规则、Repository 接口） |
 | `infrastructure` | 基础设施层（持久化实现、外部 Gateway） |
@@ -93,6 +95,6 @@ Conventional Commits：`<type>(<scope>): <中文描述>`
 ## 相关文档
 
 - 架构与分层约束：[`ARCHITECTURE.md`](./ARCHITECTURE.md)
+- 文档总索引：[docs/index.md](docs/index.md)
 - AI Agent 导航：[`AGENTS.md`](./AGENTS.md)
-- 设计哲学：`docs/design-docs/core-beliefs.md`
-- 需求工作流：`docs/active/index.md`
+- 开发与协作：[开发指南](docs/engineering/development.md)
