@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-24
+updated: 2026-11-07
 ---
 
 # 业务领域划分
@@ -30,8 +30,7 @@ updated: 2026-10-24
 ### 数据库映射
 
 - 表名：`customer`
-- 当前运行迁移：[Start 模块的 V1](../start/src/main/resources/db/migration/V1__create_customer.sql)，由 Flyway 的 `classpath:db/migration` 加载
-- 根目录另有[迁移副本](../db/migration/V1__create_customer.sql)，目前尚未确定唯一维护源
+- 唯一迁移源：[Start 模块的 V1](../start/src/main/resources/db/migration/V1__create_customer.sql)，由开发与测试配置中的 Flyway `classpath:db/migration` 加载；维护方式见[数据库迁移规则](engineering/development.md#数据库迁移)
 - 唯一约束：email（idx_email）
 - 索引：status（idx_status）
 

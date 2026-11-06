@@ -39,7 +39,7 @@
 | --- | --- |
 | 新增业务能力、对象或模块依赖 | [架构](ARCHITECTURE.md)与[领域](docs/DOMAINS.md)，再定位所属层 |
 | 修改请求、响应或公共契约 | Adapter / Client 与实际调用方，核对兼容性和相关测试 |
-| 修改数据库结构 | [迁移说明](db/README.md)与启动模块实际迁移资源 |
+| 修改数据库结构 | [数据库迁移规则](docs/engineering/development.md#数据库迁移)与 Start 模块的唯一迁移源 |
 | 新增文档、脚本、报告或目录 | [文档治理](docs/standards/documentation-governance.md)，先说明持续用途及归属 |
 | 版本、需求、技术债流转或归档 | [版本与需求](docs/standards/documentation-governance.md#版本与需求)，核对归属、记录及授权 |
 | 选择验证和说明完成情况 | [开发指南](docs/engineering/development.md)，核对实际报告与未覆盖范围 |
