@@ -104,7 +104,7 @@ updated: 2026-10-24
 
 ### TD-001：文档事实漂移且缺少一致性检查
 
-**证据与进展**：此前 [DOMAINS](../DOMAINS.md) 将尚不存在的 client 契约 DTO、App CmdExe/QryExe 标为完成，旧评分卡也误称 db-schema 是占位文件。2026-10-24 的[文件约束与项目纪律优化](../design-docs/arch-project-discipline.md)已纠正实现状态、淘汰陈旧评分卡，并补充文档总索引、文件归属和维护规则。原记录中的持续自动检查缺口未在本轮处理；本轮未复核 CI，本条保持开放。
+**证据与进展**：此前 [DOMAINS](../DOMAINS.md) 将尚不存在的 client 契约 DTO、App CmdExe/QryExe 标为完成，旧评分卡也误称 db-schema 是占位文件。2026-10-24 的文件约束与项目纪律优化已纠正实现状态、淘汰陈旧评分卡，并补充文档总索引、文件归属和维护规则；当前规则由[文档治理](../standards/documentation-governance.md)及[开发指南](../engineering/development.md)维护。原记录中的持续自动检查缺口未在本轮处理；本轮未复核 CI，本条保持开放。
 
 **下一步与关闭条件**：补齐最小链接/索引检查，持续核对文档状态；语义需结合源码人工复核，不能仅依赖 Markdown lint。所有当前文档中的“已实现”应能定位到实际代码，新增失效链接应被检查拒绝。本轮局部文档验证不等于已有持续自动检查。
 

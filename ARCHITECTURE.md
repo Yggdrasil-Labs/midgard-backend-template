@@ -231,7 +231,7 @@ infrastructure.config                  ← 技术配置（扩展位）
 如果你需要：
 
 - 文档地图与文件归属：看[文档总索引](docs/index.md)与[治理规范](docs/standards/documentation-governance.md)
-- 设计哲学：看 `docs/design-docs/core-beliefs.md`
+- 工程原则：看[工程信条](docs/standards/core-beliefs.md)
 - 需求工作流：看 `docs/active/index.md`
 - 质量证据与当前缺口：看[开发指南](docs/engineering/development.md)与[技术债清单](docs/active/tech-debt-tracker.md)
 - 可靠性与安全约束：看 `docs/RELIABILITY.md` 与 `docs/SECURITY.md`
