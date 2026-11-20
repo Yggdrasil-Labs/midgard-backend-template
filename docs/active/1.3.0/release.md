@@ -15,7 +15,7 @@
 | 需求 | 路径 | 简述 | 关联 TD | 依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
 | mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；项目仅维护单元/架构测试；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 已实现；集成测试范围已取消，清理后本地复验见下文，远端 CI 待验收 |
-| error-contract-r | `1.3.0/error-contract-r/` | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates | 未开始 |
+| error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 方案已编写，未实施 |
 | data-consistency | `1.3.0/data-consistency/` | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 未开始 |
 | mimir-runtime-adoption | `1.3.0/mimir-runtime-adoption/` | 采用 Mimir 日志配置；移除全部 COLA 组件依赖与 cola 包扫描；关闭 Bean 覆盖；CORS 改用 Mimir 配置并暴露 `X-Trace-Id` | TD-014（待登记） | mimir-upgrade-gates；移除 COLA dto/exception 依赖 error-contract-r | 未开始 |
 | arch-test-adoption | `1.3.0/arch-test-adoption/` | 架构测试改用 `ColaArchRules` 与 Mimir 测试基类；最小违规夹具证明规则生效 | TD-013 | mimir-upgrade-gates | 未开始 |
@@ -35,9 +35,10 @@
 
 **error-contract-r**
 
-- 按[契约](../../design-docs/arch-api-contract.md)实施：成功统一 200 + `R`；业务错误 200 + 业务码；`CustomerErrorCode`（`21001`、`21002`）；开启结构化校验详情；扁平分页参数转换为 Mimir `PageRequest`；Controller 显式返回 `R`；对外 DTO 实现 `Serializable`。
+- 按[契约](../../design-docs/arch-api-contract.md)实施：成功统一 200 + `R`；业务错误 200 + 异常码；`CustomerErrorCode`（`21001`、`21002`）；开启结构化校验及显式 null 输出；扁平分页转换为 PageRequest，查询/回包使用同一组纠正值；Controller 显式返回 `R`；对外 DTO 实现 Serializable。
 - `name`/`email`/`phone` 长度在请求 DTO、`Customer.validate()`、数据库三处一致（50/100/20）。
-- 验收：Controller standalone、Handler 和序列化单元测试覆盖 JSON 形状、成功、`20001`、`21001`、`21002`、`00004`、请求体不可解析 400、未知异常 500；email 100/101、phone 20/21 边界验证拒绝且不调用仓储写入。按需人工启动应用确认实际 Handler 生效、采集真实响应样例供 Asgard 使用；单元测试不证明数据库状态或自动装配行为，不新增集成测试。
+- 删除本地 Advice 前，保留对 MySQL idx_email 重复的定向翻译；请求校验 400 与 App/Domain 直调 BizException 200 的边界明确。`21002` 在本项只验映射，version/真实冲突仍归 data-consistency。
+- 验收：Controller standalone、Handler 和受管序列化单元测试覆盖五接口、字段/对象错误、分页纠正、空 data、错误码和安全消息；email 100/101、phone 20/21 拒绝时无仓储写入。追踪公开组件用隔离夹具验证，自动装配、数据库与真实响应采集按需人工执行，不新增集成测试。范围与文件见计划。
 
 **data-consistency**
 
