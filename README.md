@@ -28,10 +28,10 @@ cp start/src/main/resources/application-local.yml.example start/src/main/resourc
 ## 开发命令
 
 ```bash
-./mvnw -B -ntp test                         # Surefire 单测，不运行容器集成测试
-./mvnw -B -ntp verify                       # 单测与集成测试；需要 Docker，不运行全量质量检查
-./mvnw -B -ntp -Pprecheck clean verify      # 本地全量质量预检；需要 Docker
-./mvnw -B -ntp -Pci clean verify            # CI 门禁：全量预检并启用 Enforcer；需要 Docker
+./mvnw -B -ntp test                         # 单元测试与架构测试，无需 Docker
+./mvnw -B -ntp verify                       # 单元测试与架构测试，无需 Docker
+./mvnw -B -ntp -Pprecheck clean verify      # 本地全量质量预检，无需 Docker
+./mvnw -B -ntp -Pci clean verify            # CI 门禁：全量预检并启用 Enforcer，无需 Docker
 ./mvnw -B -ntp spring-boot:run -pl start -am # 启动服务
 ./mvnw -B -ntp spotless:apply               # 显式格式化源码
 ```

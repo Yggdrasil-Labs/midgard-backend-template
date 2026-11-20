@@ -21,7 +21,7 @@
 | 跨服务契约 | Client；当前仅有包结构预留，新增接口或 DTO 时同步使用方与兼容说明 |
 | 装配与运行配置 | Start；不把业务规则放入启动模块 |
 | 数据库结构 | 迁移唯一维护在 Start 模块的 `src/main/resources/db/migration`，按[数据库迁移规则](#数据库迁移)新增版本 |
-| 回归测试 | 所属模块 `src/test/`；完整应用链路样例在 Start，跨项目 E2E 由对应项目维护 |
+| 回归测试 | 所属模块 `src/test/`；仅编写单元测试、MockMvc standalone 与 ArchUnit 测试 |
 
 本表用于定位，不重新定义[架构约束](../../ARCHITECTURE.md)。不要把建议结构写成已有实现。
 
@@ -43,33 +43,40 @@
 
 ## 按改动验证
 
+### 测试范围
+
+- 项目测试仅包含单元测试、MockMvc standalone 测试与 ArchUnit 架构测试。
+- 不新增启动 Spring 上下文、连接真实数据库或访问外部 I/O 的集成测试；不要把此类测试改名后并入 Surefire。
+- standalone 与 mock 测试验证其隔离边界内的行为，不能据此声称真实数据库、完整 Spring 装配或外部系统行为已验证。需要这些证据时，作为独立的运行环境验证说明对象与环境，不在项目中新增集成测试。
+- 默认 `test`、`verify`、`precheck` 与 `ci` 生命周期无需 Docker，也不需要 `-DskipITs`。
+
 | 改动 | 所需证据 |
 | --- | --- |
 | 纯文档 | 本次文件的格式、链接、导航和事实核对；`git diff --check` |
-| 局部逻辑 | 相关单测及受影响模块检查；明确尚未覆盖的集成行为 |
-| 接口、持久化或配置 | 对应契约与集成场景；需真实数据库或完整上下文的结论不能由 mock 替代 |
+| 局部逻辑 | 相关单元测试、MockMvc standalone 或架构测试及受影响模块检查；明确外部环境行为未由这些测试验证 |
+| 接口、持久化或配置 | 对应契约与隔离测试；需真实数据库或完整上下文的结论不能由 mock 替代，作为独立运行环境验证记录 |
 | 跨模块或依赖变化 | 受影响模块构建、兼容性及适用回归验证 |
 
-以下 Maven 命令用于已授权的实施与验证。`test` 提供不启动容器的 Surefire 单测反馈；默认 `verify` 执行单测与集成测试，但不启用全量质量检查。集成测试使用 Testcontainers，需要可用的 Docker 引擎。
+以下 Maven 命令用于已授权的实施与验证。测试生命周期运行单元测试、MockMvc standalone 测试和 ArchUnit 测试，不启动集成测试或依赖 Docker。
 
 ```bash
-# 单测；不运行容器集成测试
+# 单元测试、MockMvc standalone 测试与 ArchUnit 测试
 ./mvnw -B -ntp test
 
-# 默认生命周期：单测与集成测试，需要 Docker；跳过全量质量检查
+# 默认生命周期：测试与打包验证，不启用全量质量检查
 ./mvnw -B -ntp verify
 
-# 本地全量质量预检：单测、集成测试、覆盖率、格式及 PMD/CPD，需要 Docker
+# 本地全量质量预检：测试、覆盖率、格式及 PMD/CPD
 ./mvnw -B -ntp -Pprecheck clean verify
 
-# CI 同一门禁，另启用 Enforcer；需要 Docker，不要求 GPG 私钥
+# CI 同一门禁，另启用 Enforcer；不要求 Docker 或 GPG 私钥
 ./mvnw -B -ntp -Pci clean verify
 
 # 仅在需要时显式修改格式，随后复核差异
 ./mvnw -B -ntp spotless:apply
 ```
 
-正常生命周期中的 Spotless 只检查格式，不会自动修改源码；`spotless:apply` 仅由开发者显式执行。全量质量检查由 `precheck` 和 `ci` profile 启用，`ci` 额外运行 Enforcer；GPG 签名默认跳过。命令是否通过及实际覆盖范围，以本轮报告为准；Docker 不可用时，不能将未运行的集成测试记为通过。
+正常生命周期中的 Spotless 只检查格式，不会自动修改源码；`spotless:apply` 仅由开发者显式执行。全量质量检查由 `precheck` 和 `ci` profile 启用，`ci` 额外运行 Enforcer；GPG 签名默认跳过。命令是否通过及实际覆盖范围，以本轮报告为准。测试通过不构成真实数据库迁移、完整 Spring 上下文或外部系统行为的验证证据。
 
 ## 交付
 

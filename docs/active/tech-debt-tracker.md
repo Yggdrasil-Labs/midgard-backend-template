@@ -23,7 +23,7 @@ updated: 2026-11-07
 
 | ID | 优先级 | 状态 | 主题 | 处理边界 |
 | --- | --- | --- | --- | --- |
-| TD-006 | P1 | 开放（已实施，待容器及 CI 验收） | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
+| TD-006 | P1 | 开放（本地验证通过，待 CI 验收） | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
 | TD-007 | P1 | 开放 | 构建凭据写入 builder 层及缓存风险 | Dockerfile / build.sh / Release |
 | TD-008 | P1 | 开放 | 旧版本重发可能倒退 main 版本及 latest 镜像 | Release |
 | TD-005 | P1 | 开放 | 并发更新可能假成功或覆盖其他修改 | App / Repository / 数据库 |
@@ -43,9 +43,11 @@ updated: 2026-11-07
 
 **实施进展（2026-11-20）**：按 [1.3.0 升级门禁方案](1.3.0/mimir-upgrade-gates/plan.md)升级 Parent/BOM 至 2.4.0，移除测试跳过、自动 apply 及重复插件配置。CI 对所有 PR 使用同一 `-Pci clean verify`；PMD/CPD 显式启用违规阻断与分析错误阻断，签名默认跳过。补齐必要模块测试及存量规则违规，未降低阈值。
 
-**本地证据**：7 模块的 dev/precheck/ci 有效模型核对通过；`-Pci verify -DskipITs` 在原工作区及无旧构建产物的临时普通副本通过，57 项单元/架构测试零失败、错误、跳过。四业务模块实际通过覆盖率阈值，生产/测试静态报告零违规；9 组独立故障夹具均由预期检查拒绝。构建不自动修改源码，结果集中在 [版本记录](1.3.0/release.md#最终验证摘要)。
+**升级初次本地证据**：7 模块的 dev/precheck/ci 有效模型核对通过；`-Pci verify -DskipITs` 在原工作区及无旧构建产物的临时普通副本通过，57 项单元/架构测试零失败、错误、跳过。四业务模块实际通过覆盖率阈值，生产/测试静态报告零违规；当时的 9 组独立故障夹具均由预期检查拒绝。结果集中在 [版本记录](1.3.0/release.md#最终验证摘要)。
 
-**下一步与关闭条件**：在可用 Docker 环境中运行包含真实 MySQL/Testcontainers IT 的完整门禁，后续获准推送后核验远端 CI。当前用户明确同意容器验收待验证；数据库/应用完整上下文尚无新运行证据，本条保持开放，不以独立失败 IT 夹具或跳过 IT 的构建替代。
+**范围调整与关闭条件**：用户最新要求不再维护项目集成测试，原容器及失败 IT 夹具要求已取消。移除相关源码/依赖并取消 Failsafe 生命周期绑定后，复验无需 `-DskipITs` 的单元/架构及质量门禁，再于获准推送后核验远端 CI；本条保持开放。真实数据库与完整应用行为不属于单元测试证明范围，删除集成测试不自动关闭迁移或运行时相关债务。
+
+**清理后本地复验**：`-Pci verify` 未传 `-DskipITs` 通过，57 项单元/架构测试全部执行；默认 verify 与依赖树检查通过，实际依赖无 Testcontainers，Failsafe 无生命周期执行。当前仅剩远端 CI 待验收，不再把已取消的集成测试列作关闭前置。
 
 **历史证据边界**：2.2.1 环境的 `No pinentry` 及 `-Dgpg.skip=true` 无效属于历史结果；`66a6bf3` 处理空 client 模块 Javadoc 打包失败，不单独构成本条关闭依据。
 
@@ -69,7 +71,7 @@ updated: 2026-11-07
 
 **证据与影响**：[CustomerAppServiceImpl](../../app/src/main/java/io/yggdrasil/labs/midgard/app/customer/application/CustomerAppServiceImpl.java) 先读取实体，再修改字段并返回成功对象；[CustomerRepositoryImpl](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/impl/CustomerRepositoryImpl.java) 将完整实体转 DO 后调用 `updateById`，忽略影响行数，[CustomerDO](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/dataobject/CustomerDO.java) 无版本字段。
 
-读取后被其他事务删除时，更新 0 行仍可能返回成功；两个请求基于旧实体修改不同字段时，也可能覆盖另一请求的修改。已有单测和集成测试未覆盖这些并发场景。
+读取后被其他事务删除时，更新 0 行仍可能返回成功；两个请求基于旧实体修改不同字段时，也可能覆盖另一请求的修改。现有单测未证明真实数据库的并发行为，后续按需人工运行验证，不新增集成测试。
 
 **下一步与关闭条件**：明确并发写入语义，检查影响行数，采用版本条件更新等策略。用真实 MySQL 和事务屏障稳定覆盖“读后被删”及两个并发更新，证明无假成功、无静默覆盖，同时保留正常更新行为。
 
@@ -79,7 +81,7 @@ updated: 2026-11-07
 
 **证据与影响**：[ErrorResponse](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/dto/ErrorResponse.java) 和本地 [GlobalExceptionHandler](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/GlobalExceptionHandler.java) 使用 `code/message`；[Asgard 拦截器](../../../asgard-frontend-template/src/utils/api/request.ts) 的非 2xx 分支读取 `errCode/errMessage`。后端格式的 400/409 响应进入该分支时，业务码及具体字段说明会丢失。
 
-[CustomerApiIT](../../start/src/test/java/io/yggdrasil/labs/midgard/start/customer/CustomerApiIT.java) 断言 `$.code`，不能证明前端能正确消费。与 [Asgard 技术债清单](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md) 第 10 项对应同一跨项目问题。
+历史 `CustomerApiIT` 曾断言 `$.code`，不能证明前端能正确消费；该测试已按用户要求移除。与 [Asgard 技术债清单](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md) 第 10 项对应同一跨项目问题。
 
 **下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖 400、404、409、500，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
 
@@ -133,7 +135,7 @@ updated: 2026-11-07
 
 | ID | 关闭日期 | 主题 | 关闭依据与边界 |
 | --- | --- | --- | --- |
-| TD-003 | 2026-10-23 | 模板业务示例不足 | Customer 已具备 Domain/App/Infrastructure/Adapter 完整链路，[CustomerApiIT](../../start/src/test/java/io/yggdrasil/labs/midgard/start/customer/CustomerApiIT.java) 有 CRUD 生命周期样例，Bifrost 也有 Customer CRUD E2E 源码。仅关闭“缺少样例”，不代表容器集成或 E2E 本轮运行通过。 |
+| TD-003 | 2026-10-23 | 模板业务示例不足 | 当时 Customer 已具备 Domain/App/Infrastructure/Adapter 完整链路，历史 CustomerApiIT 提供 CRUD 样例；该集成测试现已按用户要求移除，Bifrost 示例不在本次清理范围。保留原关闭事实，不代表运行验收通过。 |
 | TD-004 | 2026-06-07 | 前端相关文档仍为占位 | 沿用原关闭日期；本轮确认 FRONTEND.md 已不存在。 |
 
 ## 建议处理顺序

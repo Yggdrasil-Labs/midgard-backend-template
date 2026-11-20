@@ -152,6 +152,17 @@
 
     <build>
         <plugins>
+            <!-- 本项目只维护单元与架构测试，取消 Parent 的集成测试生命周期绑定。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Flatten Plugin (版本管理) - 复用 mimir-boot-parent 中的配置 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

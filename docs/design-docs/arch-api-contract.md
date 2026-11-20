@@ -82,7 +82,7 @@ verified: null
 }
 ```
 
-`source` 取值以 Mimir 枚举为准，实施时由集成测试抓取真实响应固化为样例。客户端按 `path` 映射到表单字段，`truncated=true` 时追加汇总提示。
+`source` 取值以 Mimir 枚举为准；测试使用 MockMvc standalone 与序列化断言核对响应结构。需要真实响应样例时，按需在目标运行环境人工采集并记录环境，不以 mock 结果冒充真实响应。客户端按 `path` 映射到表单字段，`truncated=true` 时追加汇总提示。
 
 长度约束以 DDL 为上限（`name` 50、`email` 100、`phone` 20），在请求 DTO（`@Size`）、`Customer.validate()` 与数据库列三处同时生效。
 
@@ -115,8 +115,8 @@ verified: null
 
 计划执行（尚无结果）：
 
-- `CustomerApiIT` 在真实 Spring 上下文与 MySQL 下断言 JSON 结构，覆盖成功、`20001`、`21001`、`21002`、`00004`、请求体不可解析（400）、未知异常（500），并确认仅 Mimir Handler 生效。
-- 从上述测试的真实响应导出样例，作为 Asgard 拦截器与 Customer API 单元测试输入。
+- Adapter 层单元测试与 MockMvc standalone 测试断言 JSON 结构，覆盖成功、`20001`、`21001`、`21002`、`00004`、请求体不可解析（400）及未知异常（500）的契约映射；序列化断言核对字段形状。此类测试不证明完整 Spring 上下文中 Handler 的装配行为。
+- Asgard 拦截器与 Customer API 单元测试使用明确的契约 fixture；真实运行响应如有需要，按需人工采集，单独标注运行环境与来源。
 
 ## 参考
 
