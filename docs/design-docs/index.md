@@ -2,7 +2,11 @@
 
 本目录保存跨需求的实际架构设计与关键技术取舍。每份文档应说明需要解决的技术问题、候选方案、采用理由、影响范围及验证依据。
 
-当前核心分层由 [ARCHITECTURE](../../ARCHITECTURE.md) 维护，尚无另行维护的跨需求设计条目。
+当前核心分层由 [ARCHITECTURE](../../ARCHITECTURE.md) 维护。
+
+| 主题 | 状态 | 适用范围 | 路径 |
+| --- | --- | --- | --- |
+| HTTP API 响应与错误契约 | draft | Midgard 对外 HTTP 接口及 Asgard 消费方 | [arch-api-contract.md](arch-api-contract.md) |
 
 工程原则见[工程信条](../standards/core-beliefs.md)，文档组织与维护见[文档治理](../standards/documentation-governance.md)。单个需求的设计放在所属版本需求目录；日常规则调整和治理过程说明不作为本目录的设计条目。
 
