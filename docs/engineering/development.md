@@ -50,20 +50,26 @@
 | 接口、持久化或配置 | 对应契约与集成场景；需真实数据库或完整上下文的结论不能由 mock 替代 |
 | 跨模块或依赖变化 | 受影响模块构建、兼容性及适用回归验证 |
 
-以下 Maven 命令用于已授权的实施与验证；默认 profile 包含自动格式化，不作为只读调查命令使用：
+以下 Maven 命令用于已授权的实施与验证。`test` 提供不启动容器的 Surefire 单测反馈；默认 `verify` 执行单测与集成测试，但不启用全量质量检查。集成测试使用 Testcontainers，需要可用的 Docker 引擎。
 
 ```bash
-# 模块单测示例；同时构建所需 Reactor 依赖
-./mvnw -pl app -am test
+# 单测；不运行容器集成测试
+./mvnw -B -ntp test
 
-# 项目构建及测试生命周期；以实际报告判断覆盖范围
-./mvnw clean verify
+# 默认生命周期：单测与集成测试，需要 Docker；跳过全量质量检查
+./mvnw -B -ntp verify
 
-# 显式修改格式，随后复核差异
-./mvnw spotless:apply
+# 本地全量质量预检：单测、集成测试、覆盖率、格式及 PMD/CPD，需要 Docker
+./mvnw -B -ntp -Pprecheck clean verify
+
+# CI 同一门禁，另启用 Enforcer；需要 Docker，不要求 GPG 私钥
+./mvnw -B -ntp -Pci clean verify
+
+# 仅在需要时显式修改格式，随后复核差异
+./mvnw -B -ntp spotless:apply
 ```
 
-本项目默认 dev 配置会执行格式化，并跳过 Spotless check 与 JaCoCo；命令成功不等于全部格式、覆盖率和集成验收通过。检查时读取实际启用配置及本轮报告，不把其他仓库的命令行为套用到这里。数据库集成测试需要对应运行环境，跳过时明确说明。
+正常生命周期中的 Spotless 只检查格式，不会自动修改源码；`spotless:apply` 仅由开发者显式执行。全量质量检查由 `precheck` 和 `ci` profile 启用，`ci` 额外运行 Enforcer；GPG 签名默认跳过。命令是否通过及实际覆盖范围，以本轮报告为准；Docker 不可用时，不能将未运行的集成测试记为通过。
 
 ## 交付
 

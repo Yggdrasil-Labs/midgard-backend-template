@@ -23,7 +23,7 @@ updated: 2026-11-07
 
 | ID | 优先级 | 状态 | 主题 | 处理边界 |
 | --- | --- | --- | --- | --- |
-| TD-006 | P1 | 开放 | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
+| TD-006 | P1 | 开放（已实施，待容器及 CI 验收） | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
 | TD-007 | P1 | 开放 | 构建凭据写入 builder 层及缓存风险 | Dockerfile / build.sh / Release |
 | TD-008 | P1 | 开放 | 旧版本重发可能倒退 main 版本及 latest 镜像 | Release |
 | TD-005 | P1 | 开放 | 并发更新可能假成功或覆盖其他修改 | App / Repository / 数据库 |
@@ -39,22 +39,15 @@ updated: 2026-11-07
 
 ### TD-006：质量门禁入口与签名职责混杂
 
-**证据与现状**：
+**原问题（Mimir Parent 2.3.0）**：根 POM 的 `ci` 显式跳过测试，且该模式有效模型仍要求 GPG 签名；默认/precheck 生命周期又自动执行 Spotless apply。原 CI 的独立 Test job 实际执行默认 `verify`，并非整个 CI 不运行测试，但未统一采用严格质量入口，Dependabot 的构建路径仅做编译。
 
-- [根 POM](../../pom.xml) 的 `ci` profile 仍设置 `skipTests=true`、`maven.test.skip=true`；当前 Mimir Parent **2.3.0** 在该 profile 的 `verify` 阶段仍绑定 `gpg:sign`，有效配置为 `skip=false`。
-- [CI](../../.github/workflows/ci.yml) 分为构建和测试两个 job，Test 确实执行默认 `verify`，不能表述为“整个 CI 不运行测试”。普通 PR 另有 `validate -Pci` 格式检查；Dependabot 分支跳过该步骤。
-- 默认 dev 有效模型跳过 JaCoCo 和 Spotless check；根 POM 又在 `process-sources` 执行 Spotless apply，所以默认校验会自动格式化源码，而不是以格式错误阻断构建。
-- **已有 precheck 候选入口**：有效模型开启测试与 JaCoCo，执行插件列表中无 GPG，但仍包含自动格式化；CI 未采用，尚未验证失败用例能否被门禁拒绝。无需为此预设新建一套 profile。
+**实施进展（2026-11-20）**：按 [1.3.0 升级门禁方案](1.3.0/mimir-upgrade-gates/plan.md)升级 Parent/BOM 至 2.4.0，移除测试跳过、自动 apply 及重复插件配置。CI 对所有 PR 使用同一 `-Pci clean verify`；PMD/CPD 显式启用违规阻断与分析错误阻断，签名默认跳过。补齐必要模块测试及存量规则违规，未降低阈值。
 
-| 入口 | 测试配置 | 覆盖率配置 | 格式行为 | 签名执行 |
-| --- | --- | --- | --- | --- |
-| 默认 dev | 开启 | 跳过 | 自动 apply，check 跳过 | 无 |
-| ci | 本项目显式跳过 | 开启 | validate 有 check，后续仍有 apply | verify 强制 sign |
-| precheck | 开启 | 开启 | 仍有 apply；check 实际效果待验 | 无 |
+**本地证据**：7 模块的 dev/precheck/ci 有效模型核对通过；`-Pci verify -DskipITs` 在原工作区及无旧构建产物的临时普通副本通过，57 项单元/架构测试零失败、错误、跳过。四业务模块实际通过覆盖率阈值，生产/测试静态报告零违规；9 组独立故障夹具均由预期检查拒绝。构建不自动修改源码，结果集中在 [版本记录](1.3.0/release.md#最终验证摘要)。
 
-**下一步与关闭条件**：优先评估并收敛现有 precheck，使 CI 采用无签名、只检查源码的质量入口；在具备 Docker 的干净环境中验证单测、集成测试、覆盖率和格式门禁均实际执行，工作区不变。故意引入失败测试、覆盖率不足和格式错误时均应返回非零。
+**下一步与关闭条件**：在可用 Docker 环境中运行包含真实 MySQL/Testcontainers IT 的完整门禁，后续获准推送后核验远端 CI。当前用户明确同意容器验收待验证；数据库/应用完整上下文尚无新运行证据，本条保持开放，不以独立失败 IT 夹具或跳过 IT 的构建替代。
 
-**证据边界**：本轮执行 `help:effective-pom` 核对 ci/precheck，未重新执行签名；旧记录中 2.2.1 环境的 `No pinentry` 及 `-Dgpg.skip=true` 无效属于历史证据。`66a6bf3` 已处理空 client 模块 Javadoc 打包失败，该修复不能关闭本条质量门禁债务。
+**历史证据边界**：2.2.1 环境的 `No pinentry` 及 `-Dgpg.skip=true` 无效属于历史结果；`66a6bf3` 处理空 client 模块 Javadoc 打包失败，不单独构成本条关闭依据。
 
 ### TD-007：构建凭据写入 builder 层及缓存风险
 

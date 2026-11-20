@@ -3,9 +3,9 @@
 ## 版本摘要
 
 - **版本**：1.3.0
-- **状态**：规划中（需求范围已确认，尚未进入实施）
+- **状态**：实施中（mimir-upgrade-gates 已实现，容器及远端 CI 待验收；其余需求未开始）
 - **目标**：围绕消除技术债提升项目质量（文档、架构、测试、构建脚本、基础能力），以 Mimir Boot 2.4.0 能力替换本地重复实现。
-- **前置条件**：Mimir Boot 2.4.0 已正式发布（2026-11-20 已核实 Release、发布流水线及 Central 主要制品可下载）。本版本所有需求以 2.4.0 正式版能力为准；本项目升级兼容性仍待验证。
+- **前置条件**：Mimir Boot 2.4.0 已正式发布（2026-11-20 已核实 Release、发布流水线及 Central 主要制品可下载）。本版本所有需求以 2.4.0 正式版能力为准；本项目非容器门禁已验证，完整应用与数据库集成仍待验收。
 - **跨项目协同**：Asgard 前端同步建立 1.3.0，对接本版本的 API 契约；契约规则见 [HTTP API 响应与错误契约](../../design-docs/arch-api-contract.md)。
 
 ## 需求交付
@@ -14,7 +14,7 @@
 
 | 需求 | 路径 | 简述 | 关联 TD | 依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；移除本地 `ci` 跳过测试与重复 Spotless；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 方案已编写，未实施 |
+| mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；移除本地 `ci` 跳过测试与重复 Spotless；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 已实现；本地非容器验证通过，容器及远端 CI 待验收 |
 | error-contract-r | `1.3.0/error-contract-r/` | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates | 未开始 |
 | data-consistency | `1.3.0/data-consistency/` | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 未开始 |
 | mimir-runtime-adoption | `1.3.0/mimir-runtime-adoption/` | 采用 Mimir 日志配置；移除全部 COLA 组件依赖与 cola 包扫描；关闭 Bean 覆盖；CORS 改用 Mimir 配置并暴露 `X-Trace-Id` | TD-014（待登记） | mimir-upgrade-gates；移除 COLA dto/exception 依赖 error-contract-r | 未开始 |
@@ -79,7 +79,24 @@
 
 ## 最终验证摘要
 
-尚未实施，无验证结果。
+### mimir-upgrade-gates（2026-11-20）
+
+- Parent/BOM 升至 2.4.0，继承四项 PMD/CPD 并启用严格阻断；移除本地测试跳过、Spotless apply 和 Start 重复 Failsafe 配置，保留 `exec` classifier。CI 统一为单个 `build` job，普通 PR 与 Dependabot 均执行 `./mvnw -B -ntp -Pci clean verify`。
+- 存量修复仅补公开类型/方法 Javadoc、提取三个重复字面量常量；新增 Infrastructure 仓储/转换测试、现有异常 Handler 回归测试，补 App 更新边界。HTTP 契约、业务及数据库语义未调整。
+- 环境：WSL、Temurin 17.0.19、Maven Wrapper 3.9.16。7 模块的 `dev`、`precheck`、`ci` 有效模型核对通过；全模块生产编译通过。CI YAML 解析、触发范围/权限/统一命令断言通过；未运行 actionlint 或远端 CI。
+- 本地 `./mvnw -B -ntp -Pci verify -DskipITs` 与 `./mvnw -B -ntp -Pprecheck verify -DskipITs` 均通过。另从当前已跟踪及非忽略新增文件建立无旧构建产物的临时普通副本，同一 CI 命令通过；构建后副本内所有复制的源码、配置和文档内容保持一致。未清理原工作区构建目录，不将本次命令写作已执行 `clean verify`。
+- 新副本实际执行 **57 项单元/架构测试，0 失败、0 错误、0 跳过**；6 个子模块的 24 份生产/测试 PMD/CPD XML 均存在且零违规、重复及处理错误。四个业务模块实际接受 JaCoCo 阈值检查，结果如下。
+
+| 模块 | 指令覆盖率 | 分支覆盖率 |
+| --- | --- | --- |
+| Domain | 82.86% | 100.00% |
+| App | 97.67% | 79.17% |
+| Adapter | 72.49% | 78.57% |
+| Infrastructure | 98.74% | 100.00% |
+
+- Client 当前仅包结构，无测试执行数据；Start 的唯一生产类 Application 被 Parent 排除，覆盖率报告无可计量类。两者不记为覆盖率达标。
+- 独立临时副本中先验证 Domain 正常基线，再分别注入失败单测、失败 IT、覆盖率不足、格式、生产/测试 PMD、生产/测试 CPD、Enforcer 禁止依赖，**9 组均返回非零且失败来自预期门禁**。IT 使用不依赖数据库的独立夹具，只证明 Failsafe 的运行与结果验证，不代替真实 MySQL IT。
+- **待验收**：当前 Docker Desktop Linux 引擎不可用、WSL 无 Docker socket；用户已于本次实施会话确认“先完成其他工作，容器验收保留待验证”。现有 8 项 CustomerApiIT 未运行；实际 Spring 上下文、MySQL/Flyway 及远端 CI 不记为通过，TD-006 保持开放。本批仅作本地分阶段提交，未推送远端。
 
 ## 风险与遗留债务
 
