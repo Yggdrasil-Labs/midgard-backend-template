@@ -19,10 +19,14 @@ import com.alibaba.cola.exception.BizException;
 import io.yggdrasil.labs.midgard.adapter.web.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 
+/** 将 Web 层异常转换为统一的错误响应。 */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+
+    /** 将请求体校验错误转换为 HTTP 400 响应。 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -31,17 +35,19 @@ public class GlobalExceptionHandler {
                         .map(e -> e.getField() + ": " + e.getDefaultMessage())
                         .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildResponse("VALIDATION_ERROR", message, request));
+                .body(buildResponse(VALIDATION_ERROR_CODE, message, request));
     }
 
+    /** 将参数类型不匹配错误转换为 HTTP 400 响应。 */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         String message = "参数 '" + ex.getName() + "' 类型不合法";
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildResponse("VALIDATION_ERROR", message, request));
+                .body(buildResponse(VALIDATION_ERROR_CODE, message, request));
     }
 
+    /** 将绑定错误转换为 HTTP 400 响应。 */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindException(
             BindException ex, HttpServletRequest request) {
@@ -50,9 +56,10 @@ public class GlobalExceptionHandler {
                         .map(e -> e.getField() + ": " + e.getDefaultMessage())
                         .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(buildResponse("VALIDATION_ERROR", message, request));
+                .body(buildResponse(VALIDATION_ERROR_CODE, message, request));
     }
 
+    /** 将数据库完整性冲突转换为 HTTP 409 响应。 */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException ex, HttpServletRequest request) {
@@ -67,6 +74,7 @@ public class GlobalExceptionHandler {
                 .body(buildResponse("DATA_CONFLICT", message, request));
     }
 
+    /** 按业务错误码映射 HTTP 状态并生成错误响应。 */
     @ExceptionHandler(BizException.class)
     public ResponseEntity<ErrorResponse> handleBiz(BizException ex, HttpServletRequest request) {
         log.warn("Business exception: [{}] {}", ex.getErrCode(), ex.getMessage());
@@ -75,6 +83,7 @@ public class GlobalExceptionHandler {
                 .body(buildResponse(ex.getErrCode(), ex.getMessage(), request));
     }
 
+    /** 将未处理异常转换为 HTTP 500 响应。 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception at {}", request.getRequestURI(), ex);

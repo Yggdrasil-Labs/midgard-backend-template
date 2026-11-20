@@ -16,6 +16,7 @@ import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.CustomerD
 import io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.mapper.CustomerMapper;
 import lombok.RequiredArgsConstructor;
 
+/** 使用 MyBatis-Plus 实现客户仓储。 */
 @Repository
 @RequiredArgsConstructor
 public class CustomerRepositoryImpl implements CustomerRepository {

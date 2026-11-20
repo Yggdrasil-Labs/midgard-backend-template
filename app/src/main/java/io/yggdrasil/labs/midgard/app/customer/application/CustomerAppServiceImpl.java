@@ -18,9 +18,13 @@ import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 
+/** 实现客户用例并协调领域仓储与对象转换。 */
 @Service
 @RequiredArgsConstructor
 public class CustomerAppServiceImpl implements CustomerAppService {
+
+    private static final String NOT_FOUND_CODE = "NOT_FOUND";
+    private static final String CUSTOMER_NOT_FOUND_MESSAGE = "客户不存在";
 
     private final CustomerRepository customerRepository;
     private static final CustomerConvertor CONVERTOR = CustomerConvertor.INSTANCE;
@@ -44,7 +48,8 @@ public class CustomerAppServiceImpl implements CustomerAppService {
         Customer customer =
                 customerRepository
                         .findById(id)
-                        .orElseThrow(() -> new BizException("NOT_FOUND", "客户不存在"));
+                        .orElseThrow(
+                                () -> new BizException(NOT_FOUND_CODE, CUSTOMER_NOT_FOUND_MESSAGE));
         return ASSEMBLER.toClientObject(customer);
     }
 
@@ -71,7 +76,8 @@ public class CustomerAppServiceImpl implements CustomerAppService {
         Customer customer =
                 customerRepository
                         .findById(cmd.getId())
-                        .orElseThrow(() -> new BizException("NOT_FOUND", "客户不存在"));
+                        .orElseThrow(
+                                () -> new BizException(NOT_FOUND_CODE, CUSTOMER_NOT_FOUND_MESSAGE));
         if (cmd.getName() != null) customer.setName(cmd.getName());
         if (cmd.getEmail() != null) {
             if (!cmd.getEmail().equals(customer.getEmail())
@@ -89,7 +95,9 @@ public class CustomerAppServiceImpl implements CustomerAppService {
     @Override
     @Transactional
     public void delete(Long id) {
-        customerRepository.findById(id).orElseThrow(() -> new BizException("NOT_FOUND", "客户不存在"));
+        customerRepository
+                .findById(id)
+                .orElseThrow(() -> new BizException(NOT_FOUND_CODE, CUSTOMER_NOT_FOUND_MESSAGE));
         customerRepository.deleteById(id);
     }
 }

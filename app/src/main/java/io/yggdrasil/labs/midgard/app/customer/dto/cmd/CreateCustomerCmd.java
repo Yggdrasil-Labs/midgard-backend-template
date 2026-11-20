@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import lombok.Data;
 
+/** 创建客户用例的输入参数。 */
 @Data
 public class CreateCustomerCmd {
 

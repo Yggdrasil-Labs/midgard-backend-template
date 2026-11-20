@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import lombok.Data;
 
+/** 创建客户 HTTP 请求参数。 */
 @Data
 public class CreateCustomerRequest {
 

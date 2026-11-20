@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/** 配置本地前端访问 API 所需的跨域规则。 */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
     @Override

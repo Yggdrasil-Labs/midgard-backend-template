@@ -9,6 +9,7 @@ import com.yggdrasil.labs.mybatis.annotation.AutoMybatis;
 
 import lombok.Data;
 
+/** 客户表的持久化记录。 */
 @Data
 @TableName("customer")
 @AutoMybatis

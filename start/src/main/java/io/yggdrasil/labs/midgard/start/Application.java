@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @MapperScan("io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.mapper")
 public class Application {
 
+    /** 使用命令行参数启动应用。 */
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }

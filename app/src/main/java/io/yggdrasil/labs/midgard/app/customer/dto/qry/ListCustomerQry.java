@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 
 import lombok.Data;
 
+/** 分页查询客户用例的筛选参数。 */
 @Data
 public class ListCustomerQry {
 

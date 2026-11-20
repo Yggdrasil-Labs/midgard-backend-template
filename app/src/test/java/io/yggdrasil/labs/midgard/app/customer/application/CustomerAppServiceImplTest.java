@@ -127,20 +127,67 @@ class CustomerAppServiceImplTest {
 
     @Test
     void update_success() {
-        Customer existing = new Customer();
-        existing.setId(1L);
-        existing.setName("张三");
-        existing.setEmail("z@example.com");
-        existing.setStatus(CustomerStatus.ACTIVE);
+        Customer existing = existingCustomer();
         when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
         when(customerRepository.update(any())).thenAnswer(inv -> inv.getArgument(0));
 
         UpdateCustomerCmd cmd = new UpdateCustomerCmd();
         cmd.setId(1L);
         cmd.setName("李四");
+        cmd.setEmail("new@example.com");
+        cmd.setPhone("13900000000");
 
         CustomerCO result = service.update(cmd);
         assertEquals("李四", result.getName());
+        assertEquals("new@example.com", result.getEmail());
+        assertEquals("13900000000", result.getPhone());
+        verify(customerRepository).update(existing);
+        verify(customerRepository).existsByEmail("new@example.com");
+    }
+
+    @Test
+    void update_emptyCommand_rejectedWithoutRepositoryAccess() {
+        UpdateCustomerCmd cmd = updateCommand();
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("VALIDATION_ERROR", ex.getErrCode());
+        verify(customerRepository, never()).findById(any());
+        verify(customerRepository, never()).existsByEmail(any());
+        verify(customerRepository, never()).update(any());
+    }
+
+    @Test
+    void update_sameEmailDoesNotCheckEmailUniqueness() {
+        Customer existing = existingCustomer();
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(customerRepository.update(any())).thenAnswer(inv -> inv.getArgument(0));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setEmail("z@example.com");
+
+        CustomerCO result = service.update(cmd);
+
+        assertEquals("z@example.com", result.getEmail());
+        verify(customerRepository, never()).existsByEmail(any());
+        verify(customerRepository).update(existing);
+    }
+
+    @Test
+    void update_emailAlreadyUsed_rejectedWithoutWritingAndKeepsExistingFields() {
+        Customer existing = existingCustomer();
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(customerRepository.existsByEmail("taken@example.com")).thenReturn(true);
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setEmail("taken@example.com");
+        cmd.setPhone("13900000000");
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("DUPLICATE_EMAIL", ex.getErrCode());
+        assertEquals("张三", existing.getName());
+        assertEquals("z@example.com", existing.getEmail());
+        assertEquals("13800000000", existing.getPhone());
+        verify(customerRepository, never()).update(any());
     }
 
     @Test
@@ -166,5 +213,21 @@ class CustomerAppServiceImplTest {
         when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
         assertThrows(BizException.class, () -> service.delete(999L));
         verify(customerRepository, never()).deleteById(any());
+    }
+
+    private Customer existingCustomer() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setName("张三");
+        customer.setEmail("z@example.com");
+        customer.setPhone("13800000000");
+        customer.setStatus(CustomerStatus.ACTIVE);
+        return customer;
+    }
+
+    private UpdateCustomerCmd updateCommand() {
+        UpdateCustomerCmd cmd = new UpdateCustomerCmd();
+        cmd.setId(1L);
+        return cmd;
     }
 }

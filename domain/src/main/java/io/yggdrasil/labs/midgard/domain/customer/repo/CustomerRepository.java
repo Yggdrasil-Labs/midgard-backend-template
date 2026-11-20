@@ -5,10 +5,13 @@ import java.util.Optional;
 
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 
+/** 定义客户领域对象的持久化操作。 */
 public interface CustomerRepository {
 
+    /** 保存客户并返回持久化后的对象。 */
     Customer save(Customer customer);
 
+    /** 按标识查询客户。 */
     Optional<Customer> findById(Long id);
 
     /**
@@ -51,9 +54,12 @@ public interface CustomerRepository {
      */
     long count(String keyword, String status);
 
+    /** 更新客户并返回更新后的对象。 */
     Customer update(Customer customer);
 
+    /** 按标识删除客户。 */
     void deleteById(Long id);
 
+    /** 判断指定邮箱是否已被客户使用。 */
     boolean existsByEmail(String email);
 }

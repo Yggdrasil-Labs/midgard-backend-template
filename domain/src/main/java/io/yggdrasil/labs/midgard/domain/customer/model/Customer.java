@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+/** 表示客户的领域实体及其基础校验规则。 */
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
@@ -21,6 +22,7 @@ public class Customer {
 
     private static final String EMAIL_REGEX = "^[\\w.+%-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
 
+    /** 校验客户名称和邮箱；字段不符合规则时抛出业务异常。 */
     public void validate() {
         if (StringUtils.isBlank(name) || name.length() < 2 || name.length() > 50) {
             throw new BizException("VALIDATION_ERROR", "客户名称长度必须在2-50之间");
@@ -30,6 +32,7 @@ public class Customer {
         }
     }
 
+    /** 初始化新建客户的默认状态为启用。 */
     public void initForCreate() {
         this.status = CustomerStatus.ACTIVE;
     }
