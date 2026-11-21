@@ -4,7 +4,7 @@ status: draft
 owner: ""
 tags: [api, contract, mimir, error-code]
 created: 2026-11-11
-updated: 2026-11-20
+updated: 2026-11-21
 verified: null
 ---
 
@@ -136,7 +136,7 @@ CustomerCO 字段为 `id:number,name:string,email:string,phone:string|null,statu
 
 ## 验证依据
 
-计划执行（尚无结果）：
+`error-contract-r` 已提供本地隔离合同与受管序列化证据，实际执行结果及仍受限的回归集中在[版本记录](../active/1.3.0/release.md#error-contract-r2026-11-21)。以下测试范围不能替代运行环境、数据库或消费者验收：
 
 - Adapter 层单元测试与 MockMvc standalone 测试断言 JSON 结构，覆盖成功、`20001`、`21001`、`21002` 映射夹具、`00004`、请求体不可解析（400）及未知异常（500）的契约映射；使用 Mimir 受管 Jackson 配置核对字段形状。此类测试不证明完整 Spring 上下文中 Handler 的装配行为或真实并发能力。
 - Asgard 拦截器与 Customer API 单元测试使用明确的契约 fixture；真实运行响应如有需要，按需人工采集，单独标注运行环境与来源。

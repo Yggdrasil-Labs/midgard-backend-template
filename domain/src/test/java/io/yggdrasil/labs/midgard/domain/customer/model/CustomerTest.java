@@ -6,8 +6,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import com.alibaba.cola.exception.BizException;
+import com.yggdrasil.labs.common.exception.BizException;
 
 class CustomerTest {
 
@@ -104,6 +107,42 @@ class CustomerTest {
         assertThatThrownBy(() -> customer.validate())
                 .isInstanceOf(BizException.class)
                 .hasMessageContaining("邮箱格式不合法");
+    }
+
+    @Test
+    void validate_shouldRejectEmailLongerThanColumnCapacity() {
+        customer.setEmail("a".repeat(50) + "@" + "d".repeat(46) + ".com");
+
+        assertThatThrownBy(() -> customer.validate())
+                .isInstanceOf(BizException.class)
+                .extracting("code")
+                .isEqualTo("00004");
+    }
+
+    @Test
+    void validate_shouldAcceptEmailAtColumnCapacity() {
+        customer.setEmail("a".repeat(50) + "@" + "d".repeat(45) + ".com");
+
+        assertThatCode(() -> customer.validate()).doesNotThrowAnyException();
+    }
+
+    @Test
+    void validate_shouldRejectPhoneLongerThanColumnCapacity() {
+        customer.setPhone("1".repeat(21));
+
+        assertThatThrownBy(() -> customer.validate())
+                .isInstanceOf(BizException.class)
+                .extracting("code")
+                .isEqualTo("00004");
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"12345678901234567890"})
+    void validate_shouldAcceptOptionalPhoneWithinColumnCapacity(String phone) {
+        customer.setPhone(phone);
+
+        assertThatCode(() -> customer.validate()).doesNotThrowAnyException();
     }
 
     // ===== initForCreate() =====

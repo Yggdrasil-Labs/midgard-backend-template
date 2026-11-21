@@ -3,7 +3,7 @@
 ## 版本摘要
 
 - **版本**：1.3.0
-- **状态**：实施中（mimir-upgrade-gates 已实现；集成测试已按用户要求移除，远端 CI 待验收；其余需求未开始）
+- **状态**：实施中（升级门禁与 error-contract-r 已实现且本地门禁通过，远端 CI 待验收；其余需求未开始）
 - **目标**：围绕消除技术债提升项目质量（文档、架构、测试、构建脚本、基础能力），以 Mimir Boot 2.4.0 能力替换本地重复实现。
 - **前置条件**：Mimir Boot 2.4.0 已正式发布（2026-11-20 已核实 Release、发布流水线及 Central 主要制品可下载）。本版本所有需求以 2.4.0 正式版能力为准；本项目非容器门禁已验证，完整应用与数据库集成仍待验收。
 - **跨项目协同**：Asgard 前端同步建立 1.3.0，对接本版本的 API 契约；契约规则见 [HTTP API 响应与错误契约](../../design-docs/arch-api-contract.md)。
@@ -15,7 +15,7 @@
 | 需求 | 路径 | 简述 | 关联 TD | 依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
 | mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；项目仅维护单元/架构测试；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 已实现；集成测试范围已取消，清理后本地复验见下文，远端 CI 待验收 |
-| error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 方案已编写，未实施 |
+| error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 已实现，未提交；本地完整门禁通过，运行环境及跨项目证据另计 |
 | data-consistency | `1.3.0/data-consistency/` | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 未开始 |
 | mimir-runtime-adoption | `1.3.0/mimir-runtime-adoption/` | 采用 Mimir 日志配置；移除全部 COLA 组件依赖与 cola 包扫描；关闭 Bean 覆盖；CORS 改用 Mimir 配置并暴露 `X-Trace-Id` | TD-014（待登记） | mimir-upgrade-gates；移除 COLA dto/exception 依赖 error-contract-r | 未开始 |
 | arch-test-adoption | `1.3.0/arch-test-adoption/` | 架构测试改用 `ColaArchRules` 与 Mimir 测试基类；最小违规夹具证明规则生效 | TD-013 | mimir-upgrade-gates | 未开始 |
@@ -108,6 +108,26 @@
 - 本地 `./mvnw -B -ntp -Pci verify` 通过，**未传 `-DskipITs`**；57 项单元/架构测试全部通过，覆盖率、格式及四项 PMD/CPD 保持通过，日志无 Failsafe 生命周期执行。7 模块有效模型均确认集成测试绑定已取消。
 - 默认 `./mvnw -B -ntp verify dependency:tree '-Dincludes=org.testcontainers:*'` 通过；各模块实际依赖树中无 Testcontainers。已删除测试源码和容器测试资源，没有将集成测试改名迁入 Surefire。
 - 本次清理纳入本地提交，未推送；远端 CI 尚未验证。
+
+### error-contract-r（2026-11-21）
+
+- 已实现五接口显式 R、Mimir 错误定义与字段/对象校验，删除本地 Advice、ErrorResponse 和旧 Handler 测试并提供隔离合同测试替代。App 分页只规范化一次，总数保持 Long；Repository 双查询、V1、version、影响行数语义及其他项目未改。
+- 邮箱 100/101、电话 null/空串/20/21、空更新、空白姓名和分页纠正具有聚焦测试；Domain 邮箱 101、电话 21 及请求空白姓名校验取得真实 Red/Green。21002 仅定义与 Handler 映射，不代表真实版本冲突已实现。
+- 已在沙箱内执行 T2 的 42 个领域/分页/校验场景与 T3 的 70 个 HTTP/受管序列化/追踪场景，均为零失败、零错误、零跳过。standalone 显式使用真实 Mimir Handler、JacksonConfig customizer 与 Validator，AppService stub 只提供边界预设值，不模拟数据库或声称自动配置已验证。
+- 最终将上述场景与现有 ArchUnit 规则合并定向执行，共 **113 项通过，0 失败、0 错误、0 跳过**。这是可运行的定向集合，不是未筛选的完整回归；原 Mockito 测试保留且未被这些测试替换。
+- `./mvnw -o -B -ntp -Pci verify -DskipTests -Djacoco.skip=true` 在全部 7 模块通过，提供生产/测试编译、Spotless、Enforcer、生产/测试 PMD/CPD 的静态证据；该命令刻意不运行测试或覆盖率，不能称为完整 CI 门禁通过，不复用旧 JaCoCo 结果。
+- **已解决的测试环境限制**：原 App Mockito 套件最初在沙箱内出现 33 项 Byte Buddy self-attach 初始化错误，沙箱外测试也曾被自动审批拒绝。用户随后明确批准本次沙箱外离线验证；未改 MockMaker 或增加 javaagent 配置。
+- **最终完整本地门禁**：`./mvnw -o -B -ntp -Pci verify` 在授权环境中执行成功，无 skipTests/skipITs/jacoco.skip 参数。全部 **209 项测试通过，0 失败、0 错误、0 跳过**，包括此前受限的 App、Controller 与 Infrastructure Mockito 套件；生产/测试编译、Spotless、Enforcer、24 份 PMD/CPD XML 均通过，未执行集成测试。日志为 `/tmp/midgard-error-contract-full-ci.log`；以本次完整运行的实际报告为准。
+
+| 模块 | 本次指令覆盖率 | 本次分支覆盖率 |
+| --- | --- | --- |
+| Domain | 88.68% | 100.00% |
+| App | 97.74% | 84.62% |
+| Adapter | 64.29% | 83.33% |
+| Infrastructure | 99.14% | 97.92% |
+
+- 四业务模块实际通过 60% 指令/50% 分支阈值；Client 无可计量实现、Start Application 被继承规则排除，不记为它们覆盖率达标。
+- **其他边界**：真实 MySQL 唯一键错误形状、Spring 自动装配、前端/E2E 与远端 CI 未验证；TD-009/010/011 保留各自剩余验收条件。本批方案已提交为 f5e1ebc，实施改动未提交、未推送。
 
 ## 风险与遗留债务
 

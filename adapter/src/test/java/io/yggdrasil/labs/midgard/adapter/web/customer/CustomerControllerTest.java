@@ -16,10 +16,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.alibaba.cola.dto.PageResponse;
-import com.alibaba.cola.dto.Response;
-import com.alibaba.cola.dto.SingleResponse;
-import com.alibaba.cola.exception.BizException;
+import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.exception.ErrorCode;
+import com.yggdrasil.labs.common.page.PageResult;
+import com.yggdrasil.labs.common.response.R;
 
 import io.yggdrasil.labs.midgard.adapter.web.customer.dto.CreateCustomerRequest;
 import io.yggdrasil.labs.midgard.app.customer.application.CustomerAppService;
@@ -53,7 +53,7 @@ class CustomerControllerTest {
         request.setName("张三");
         request.setEmail("z@example.com");
 
-        SingleResponse<CustomerCO> result = controller.create(request);
+        R<CustomerCO> result = controller.create(request);
 
         assertNotNull(result.getData());
         assertEquals(1L, result.getData().getId());
@@ -68,39 +68,38 @@ class CustomerControllerTest {
 
         when(customerAppService.getById(1L)).thenReturn(co);
 
-        SingleResponse<CustomerCO> result = controller.getById(1L);
+        R<CustomerCO> result = controller.getById(1L);
 
         assertEquals(1L, result.getData().getId());
     }
 
     @Test
     void getById_notFound() {
-        when(customerAppService.getById(999L)).thenThrow(new BizException("NOT_FOUND", "客户不存在"));
+        when(customerAppService.getById(999L))
+                .thenThrow(BizException.fromError(ErrorCode.DATA_NOT_FOUND));
 
         assertThrows(BizException.class, () -> controller.getById(999L));
     }
 
     @Test
     void list_success() {
-        when(customerAppService.list(any())).thenReturn(java.util.List.of());
-        when(customerAppService.count(any())).thenReturn(0L);
+        when(customerAppService.list(any())).thenReturn(PageResult.empty(1L, 10L));
 
         ListCustomerQry qry = new ListCustomerQry();
-        qry.setPage(1);
-        qry.setSize(10);
-        PageResponse<CustomerCO> result = controller.list(qry);
+        qry.setPageIndex(1L);
+        qry.setPageSize(10L);
+        R<PageResult<CustomerCO>> result = controller.list(qry);
 
         assertNotNull(result);
     }
 
     @Test
     void list_withFilters_forwardsQueryCriteria() {
-        when(customerAppService.list(any())).thenReturn(java.util.List.of());
-        when(customerAppService.count(any())).thenReturn(0L);
+        when(customerAppService.list(any())).thenReturn(PageResult.empty(1L, 10L));
 
         ListCustomerQry qry = new ListCustomerQry();
-        qry.setPage(1);
-        qry.setSize(10);
+        qry.setPageIndex(1L);
+        qry.setPageSize(10L);
         qry.setKeyword("needle");
         qry.setStatus("ACTIVE");
         controller.list(qry);
@@ -115,7 +114,7 @@ class CustomerControllerTest {
     void delete_success() {
         doNothing().when(customerAppService).delete(1L);
 
-        Response result = controller.delete(1L);
+        R<?> result = controller.delete(1L);
 
         assertNotNull(result);
         verify(customerAppService).delete(1L);
@@ -123,7 +122,9 @@ class CustomerControllerTest {
 
     @Test
     void delete_notFound() {
-        doThrow(new BizException("NOT_FOUND", "客户不存在")).when(customerAppService).delete(999L);
+        doThrow(BizException.fromError(ErrorCode.DATA_NOT_FOUND))
+                .when(customerAppService)
+                .delete(999L);
 
         assertThrows(BizException.class, () -> controller.delete(999L));
     }

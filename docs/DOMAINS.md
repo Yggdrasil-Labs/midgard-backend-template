@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-07
+updated: 2026-11-21
 ---
 
 # 业务领域划分
@@ -21,18 +21,23 @@ updated: 2026-11-07
 | Entity | `Customer` | 聚合根，包含 name/email/phone/status |
 | Value Object | `CustomerStatus` | 枚举：ACTIVE, INACTIVE |
 | Repository | `CustomerRepository` | 持久化接口（save/findById/findAll/update/deleteById/existsByEmail——用于创建时唯一性校验） |
+| 错误定义 | `CustomerErrorCode` | 21001 邮箱重复；21002 仅定义及映射，真实版本冲突尚未实现 |
 
 ### 业务规则
 
-- `validate()`：name 长度 2-50，email 符合标准格式
+- `validate()`：name 非空白且长度 2-50，email 符合现有格式且不超过 100，phone 可选且不超过 20
 - `initForCreate()`：新建客户默认状态为 ACTIVE
+- HTTP 创建/更新请求通过字段和对象级校验；直接调用由 App/Domain 防线保护。更新的 null 表示不修改，电话空串可清空。
+- 错误与分页信封统一为 Mimir R，字段和状态码以 [HTTP API 契约](design-docs/arch-api-contract.md) 为准；不再维护本地 GlobalExceptionHandler/ErrorResponse。
 
 ### 数据库映射
 
 - 表名：`customer`
-- 唯一迁移源：[Start 模块的 V1](../start/src/main/resources/db/migration/V1__create_customer.sql)，由开发与测试配置中的 Flyway `classpath:db/migration` 加载；维护方式见[数据库迁移规则](engineering/development.md#数据库迁移)
+- 唯一迁移源：[Start 模块的 V1](../start/src/main/resources/db/migration/V1__create_customer.sql)，由应用配置中的 Flyway `classpath:db/migration` 加载；维护方式见[数据库迁移规则](engineering/development.md#数据库迁移)
 - 唯一约束：email（idx_email）
 - 索引：status（idx_status）
+- 仓储仅将可识别的 idx_email 重复键错误翻译为 21001；不改变 SQL、更新影响行数或表结构。
+- App 使用同一组 PageRequest 纠正值调用现有 findAll/count 并返回 PageResult；单次分页查询及 version 仍为后续需求。
 
 ### 各层实现状态
 
@@ -45,7 +50,7 @@ updated: 2026-11-07
 | client | 预留 | 当前只有 package-info，尚无跨服务接口与契约 DTO |
 | 迁移 | ✅ 完成 | Flyway V1 脚本就位 |
 
-表中状态仅描述源码落点，不代表集成测试或端到端验收已通过。
+表中状态仅描述源码落点。项目只维护单元/standalone/架构测试；真实应用、数据库、并发与前端消费证据单独说明，不能由隔离测试结果推断。
 
 ## 领域间关系
 

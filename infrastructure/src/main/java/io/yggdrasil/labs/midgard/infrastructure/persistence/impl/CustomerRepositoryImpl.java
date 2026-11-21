@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yggdrasil.labs.common.exception.BizException;
 
+import io.yggdrasil.labs.midgard.domain.customer.exception.CustomerErrorCode;
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.repo.CustomerRepository;
 import io.yggdrasil.labs.midgard.infrastructure.persistence.convertor.CustomerInfraConvertor;
@@ -27,7 +30,11 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     @Override
     public Customer save(Customer customer) {
         CustomerDO dataObject = CONVERTOR.toDataObject(customer);
-        customerMapper.insert(dataObject);
+        try {
+            customerMapper.insert(dataObject);
+        } catch (DataIntegrityViolationException exception) {
+            throw translateWriteFailure(exception);
+        }
         customer.setId(dataObject.getId());
         return customer;
     }
@@ -71,8 +78,19 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     @Override
     public Customer update(Customer customer) {
         CustomerDO dataObject = CONVERTOR.toDataObject(customer);
-        customerMapper.updateById(dataObject);
+        try {
+            customerMapper.updateById(dataObject);
+        } catch (DataIntegrityViolationException exception) {
+            throw translateWriteFailure(exception);
+        }
         return customer;
+    }
+
+    private RuntimeException translateWriteFailure(DataIntegrityViolationException exception) {
+        if (EmailUniqueConstraint.matches(exception)) {
+            return BizException.fromError(CustomerErrorCode.EMAIL_ALREADY_EXISTS, null, exception);
+        }
+        return exception;
     }
 
     @Override

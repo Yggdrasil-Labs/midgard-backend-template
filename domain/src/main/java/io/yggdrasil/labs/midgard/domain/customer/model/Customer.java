@@ -2,7 +2,8 @@ package io.yggdrasil.labs.midgard.domain.customer.model;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.alibaba.cola.exception.BizException;
+import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.exception.ErrorCode;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,13 +23,19 @@ public class Customer {
 
     private static final String EMAIL_REGEX = "^[\\w.+%-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
 
-    /** 校验客户名称和邮箱；字段不符合规则时抛出业务异常。 */
+    /** 校验客户名称、邮箱和可选电话；字段不符合规则时抛出业务异常。 */
     public void validate() {
         if (StringUtils.isBlank(name) || name.length() < 2 || name.length() > 50) {
-            throw new BizException("VALIDATION_ERROR", "客户名称长度必须在2-50之间");
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "客户名称长度必须在2-50之间");
         }
         if (StringUtils.isBlank(email) || !email.matches(EMAIL_REGEX)) {
-            throw new BizException("VALIDATION_ERROR", "邮箱格式不合法");
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "邮箱格式不合法");
+        }
+        if (email.length() > 100) {
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "邮箱长度不能超过100");
+        }
+        if (phone != null && phone.length() > 20) {
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "电话长度不能超过20");
         }
     }
 

@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-07
+updated: 2026-11-21
 ---
 
 # Tech Debt Tracker
@@ -27,7 +27,7 @@ updated: 2026-11-07
 | TD-007 | P1 | 开放 | 构建凭据写入 builder 层及缓存风险 | Dockerfile / build.sh / Release |
 | TD-008 | P1 | 开放 | 旧版本重发可能倒退 main 版本及 latest 镜像 | Release |
 | TD-005 | P1 | 开放 | 并发更新可能假成功或覆盖其他修改 | App / Repository / 数据库 |
-| TD-009 | P1 | 开放 | 前后端错误响应契约不一致 | Midgard / Asgard 协同 |
+| TD-009 | P1 | 开放（后端已实现，待跨项目验收） | 前后端错误响应契约不一致 | Midgard / Asgard 协同 |
 | TD-010 | P1 | 开放 | 输入长度与数据库约束不一致 | 请求 / 应用与领域入口 / 持久化 |
 | TD-001 | P2 | 开放 | 文档事实漂移且缺少一致性检查 | 文档 / CI |
 | TD-002 | P2 | 开放 | 数据库结构参考文档缺失 | 数据源 / 生成流程 |
@@ -79,19 +79,21 @@ updated: 2026-11-07
 
 ### TD-009：前后端错误响应契约不一致
 
-**证据与影响**：[ErrorResponse](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/dto/ErrorResponse.java) 和本地 [GlobalExceptionHandler](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/GlobalExceptionHandler.java) 使用 `code/message`；[Asgard 拦截器](../../../asgard-frontend-template/src/utils/api/request.ts) 的非 2xx 分支读取 `errCode/errMessage`。后端格式的 400/409 响应进入该分支时，业务码及具体字段说明会丢失。
+**原问题与影响**：历史本地 ErrorResponse/GlobalExceptionHandler 使用 code/message，而 [Asgard 拦截器](../../../asgard-frontend-template/src/utils/api/request.ts) 的非 2xx 分支读取 errCode/errMessage，业务码及字段说明可能丢失。
+
+**后端进展（2026-11-21）**：[error-contract-r](1.3.0/error-contract-r/plan.md) 已将五接口统一为 Mimir R，移除本地 Advice/ErrorResponse，业务异常为 HTTP 200 + 业务码、MVC 校验为 HTTP 400；70 个 standalone/序列化/追踪场景及包含 Mockito 套件的完整本地门禁已通过（209 项测试）。前端未改、真实消费链路未验证，不能关闭本条。
 
 历史 `CustomerApiIT` 曾断言 `$.code`，不能证明前端能正确消费；该测试已按用户要求移除。与 [Asgard 技术债清单](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md) 第 10 项对应同一跨项目问题。
 
-**下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖 400、404、409、500，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
+**下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖成功、HTTP 200 + 20001/21001、400 校验、404 协议及 500 系统错误，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
 
-**证据边界**：旧记录报告过前端受控执行复现；本轮仅重新核对两端源码，没有重跑该探针或真实 HTTP 请求。
+**证据边界**：本轮是后端隔离 HTTP/序列化测试，不是实际部署 HTTP 或 Asgard 消费验证；旧前端受控复现只作历史证据。
 
 ### TD-010：输入长度与数据库约束不一致
 
-**证据与影响**：[创建请求](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/customer/dto/CreateCustomerRequest.java)、[更新请求](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/customer/dto/UpdateCustomerRequest.java) 和 [Customer.validate()](../../domain/src/main/java/io/yggdrasil/labs/midgard/domain/customer/model/Customer.java) 均未限制邮箱、电话长度；[迁移 DDL](../../start/src/main/resources/db/migration/V1__create_customer.sql) 的上限分别为 100 和 20。
+**原问题**：创建/更新请求与 Domain 曾未限制邮箱、电话长度，而[迁移 DDL](../../start/src/main/resources/db/migration/V1__create_customer.sql) 上限分别为 100 和 20。该输入错误路径缺口曾由 P2 调整为 P1。
 
-例如 21 字符电话能够通过当前边界校验，进入持久化；数据库拒绝时可能落入通用数据冲突处理，而非明确字段错误。数据库实际 SQL mode 及响应尚未运行验证。本轮将原 P2 调整为 **P1**，依据是已存在输入错误路径的功能缺口，而非单纯维护成本。
+**当前进展（2026-11-21）**：请求 DTO/Cmd/Domain 已补齐 50/100/20 约束；HTTP 非法字段和空更新在进入 App 前拒绝，直接调用仍有领域防线。Domain、请求校验及 App/Infrastructure Mockito 回归均已通过完整本地门禁；真实应用/数据库运行证据未补充，保持开放，不将隔离测试等同实际环境验收。
 
 **下一步与关闭条件**：补齐创建/更新的长度校验，明确 App 直调及领域入口的保护范围。覆盖 email 100/101、phone 20/21 及电话缺省；超长输入返回 400 和明确字段说明，拒绝后数据库不变。
 
@@ -125,11 +127,11 @@ updated: 2026-11-07
 
 ### TD-011：两个全局异常 Advice 的职责与顺序未核验
 
-**已核实事实**：本地 [GlobalExceptionHandler](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/GlobalExceptionHandler.java) 无显式 order，且 `Exception` 兜底返回 500，未专门处理请求体解析错误。发布构件 `mimir-boot-starter-exception:2.3.0` 的源码中，`ExceptionAutoConfiguration` 缺省启用，只有存在 **MimirExceptionHandler 类型** Bean 才退让；其 `MimirExceptionHandler` 同为最低优先级，并显式将 `HttpMessageNotReadableException` 映射为 400。本地不同类型的 Advice 不会让该条件自动退让。
+**原问题**：本地 GlobalExceptionHandler 与历史 Mimir 2.3.0 Handler 均为最低优先级；本地不同类型的 Advice 不会让 Mimir 的条件自动退让，实际匹配顺序未验证，本地兜底又可能掩盖请求体错误的 400。
 
-**未知与影响**：当前完整应用实际注册顺序尚未验证。若本地 Advice 先匹配，空请求体或损坏 JSON 可能被兜底为 500；若 Mimir Advice 先匹配，则可返回 400。不能将“坏 JSON 必然返回 500”登记为已确认缺陷；同样需核对实际错误信封是否符合 TD-009 的统一契约。
+**当前进展（2026-11-21）**：本地 Advice 与 ErrorResponse 已删除，源码和打包结果不再包含它们；standalone 显式装配正式 2.4.0 Mimir Handler，已验证坏 JSON、字段错误与未知异常的映射。这不证明完整应用中自动配置已注册，实际运行选择仍未验收，保持待验证。
 
-**下一步与判定标准**：在完整 Spring 上下文中记录 Advice 顺序与实际异常处理方法，验证空 body、损坏 JSON、字段类型错误、405/415 和未知服务端异常。按结果明确两个 Advice 的职责与选择顺序，或关闭此项；确认客户端错误被误报为 500 后再定为 P1。单独装配本地 Advice 的 MockMvc 测试不能代替实际自动配置下的验证。
+**下一步与判定标准**：按需人工启动应用记录实际 Handler 与响应，核验自动配置及协议错误；不新增集成测试。只有取得实际运行证据后关闭自动装配疑点，不能把显式 standalone 装配或移除本地源码当作运行时注册结果。
 
 ## 已关闭项
 

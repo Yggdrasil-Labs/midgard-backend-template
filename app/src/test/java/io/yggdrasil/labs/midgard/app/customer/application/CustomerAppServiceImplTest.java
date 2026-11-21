@@ -3,19 +3,25 @@ package io.yggdrasil.labs.midgard.app.customer.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.alibaba.cola.exception.BizException;
+import com.yggdrasil.labs.common.exception.BizException;
 
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.CreateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.UpdateCustomerCmd;
@@ -71,7 +77,7 @@ class CustomerAppServiceImplTest {
         when(customerRepository.existsByEmail("duplicate@example.com")).thenReturn(true);
 
         BizException ex = assertThrows(BizException.class, () -> service.create(cmd));
-        assertTrue(ex.getErrCode().contains("DUPLICATE"));
+        assertEquals("21001", ex.getCode());
 
         verify(customerRepository, never()).save(any());
     }
@@ -84,7 +90,8 @@ class CustomerAppServiceImplTest {
 
         when(customerRepository.existsByEmail("valid@example.com")).thenReturn(false);
 
-        assertThrows(BizException.class, () -> service.create(cmd));
+        BizException ex = assertThrows(BizException.class, () -> service.create(cmd));
+        assertEquals("00004", ex.getCode());
 
         verify(customerRepository, never()).save(any());
     }
@@ -106,20 +113,19 @@ class CustomerAppServiceImplTest {
     void getById_notFound() {
         when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
         BizException ex = assertThrows(BizException.class, () -> service.getById(999L));
-        assertTrue(ex.getErrCode().contains("NOT_FOUND"));
+        assertEquals("20001", ex.getCode());
     }
 
     @Test
     void list_withFilters_forwardsQueryCriteriaToRepository() {
         ListCustomerQry qry = new ListCustomerQry();
-        qry.setPage(2);
-        qry.setSize(20);
+        qry.setPageIndex(2L);
+        qry.setPageSize(20L);
         qry.setKeyword("needle");
         qry.setStatus("ACTIVE");
         when(customerRepository.findAll(2, 20, "needle", "ACTIVE")).thenReturn(java.util.List.of());
 
         service.list(qry);
-        service.count(qry);
 
         verify(customerRepository).findAll(2, 20, "needle", "ACTIVE");
         verify(customerRepository).count("needle", "ACTIVE");
@@ -151,7 +157,7 @@ class CustomerAppServiceImplTest {
 
         BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
 
-        assertEquals("VALIDATION_ERROR", ex.getErrCode());
+        assertEquals("00004", ex.getCode());
         verify(customerRepository, never()).findById(any());
         verify(customerRepository, never()).existsByEmail(any());
         verify(customerRepository, never()).update(any());
@@ -183,7 +189,7 @@ class CustomerAppServiceImplTest {
 
         BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
 
-        assertEquals("DUPLICATE_EMAIL", ex.getErrCode());
+        assertEquals("21001", ex.getCode());
         assertEquals("张三", existing.getName());
         assertEquals("z@example.com", existing.getEmail());
         assertEquals("13800000000", existing.getPhone());
@@ -196,7 +202,9 @@ class CustomerAppServiceImplTest {
         UpdateCustomerCmd cmd = new UpdateCustomerCmd();
         cmd.setId(999L);
         cmd.setName("李四");
-        assertThrows(BizException.class, () -> service.update(cmd));
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+        assertEquals("20001", ex.getCode());
+        verify(customerRepository, never()).update(any());
     }
 
     @Test
@@ -211,8 +219,114 @@ class CustomerAppServiceImplTest {
     @Test
     void delete_notFound() {
         when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
-        assertThrows(BizException.class, () -> service.delete(999L));
+        BizException ex = assertThrows(BizException.class, () -> service.delete(999L));
+        assertEquals("20001", ex.getCode());
         verify(customerRepository, never()).deleteById(any());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"12345678901234567890"})
+    void create_acceptsEmail100AndOptionalPhone(String phone) {
+        CreateCustomerCmd cmd = new CreateCustomerCmd();
+        cmd.setName("张三");
+        cmd.setEmail("a".repeat(50) + "@" + "d".repeat(45) + ".com");
+        cmd.setPhone(phone);
+
+        CustomerCO result = service.create(cmd);
+
+        assertEquals(cmd.getEmail(), result.getEmail());
+        assertEquals(phone, result.getPhone());
+        verify(customerRepository).save(any(Customer.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"101, 20", "100, 21"})
+    void create_rejectsOversizedFieldsWithoutWriting(int emailLength, int phoneLength) {
+        CreateCustomerCmd cmd = new CreateCustomerCmd();
+        cmd.setName("张三");
+        cmd.setEmail("a".repeat(50) + "@" + "d".repeat(emailLength - 55) + ".com");
+        cmd.setPhone("1".repeat(phoneLength));
+
+        BizException ex = assertThrows(BizException.class, () -> service.create(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verify(customerRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"12345678901234567890"})
+    void update_acceptsEmail100AndPhoneNullEmptyOr20(String phone) {
+        Customer existing = existingCustomer();
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setEmail("a".repeat(50) + "@" + "d".repeat(45) + ".com");
+        cmd.setPhone(phone);
+
+        CustomerCO result = service.update(cmd);
+
+        assertEquals(cmd.getEmail(), result.getEmail());
+        assertEquals(phone == null ? "13800000000" : phone, result.getPhone());
+        assertEquals("张三", result.getName());
+        verify(customerRepository).update(existing);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"101, 20", "100, 21"})
+    void update_rejectsOversizedFieldsWithoutWriting(int emailLength, int phoneLength) {
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existingCustomer()));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setEmail("a".repeat(50) + "@" + "d".repeat(emailLength - 55) + ".com");
+        cmd.setPhone("1".repeat(phoneLength));
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verify(customerRepository, never()).update(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
+    void update_rejectsInvalidNameWithoutWriting(String name) {
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existingCustomer()));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setName(name);
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verify(customerRepository, never()).update(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "bad", "user@localhost"})
+    void update_rejectsInvalidEmailWithoutWriting(String email) {
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existingCustomer()));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setEmail(email);
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verify(customerRepository, never()).update(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"101, 20, email", "100, 21, phone"})
+    void commands_declareLengthConstraints(int emailLength, int phoneLength, String field) {
+        CreateCustomerCmd create = new CreateCustomerCmd();
+        create.setName("张三");
+        create.setEmail("a".repeat(50) + "@" + "d".repeat(emailLength - 55) + ".com");
+        create.setPhone("1".repeat(phoneLength));
+        UpdateCustomerCmd update = updateCommand();
+        update.setEmail(create.getEmail());
+        update.setPhone(create.getPhone());
+
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            assertEquals(1, factory.getValidator().validateProperty(create, field).size());
+            assertEquals(1, factory.getValidator().validateProperty(update, field).size());
+        }
     }
 
     private Customer existingCustomer() {
