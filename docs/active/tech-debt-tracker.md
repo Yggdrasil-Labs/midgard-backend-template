@@ -83,7 +83,7 @@ updated: 2026-11-21
 
 **后端进展（2026-11-21）**：[error-contract-r](1.3.0/error-contract-r/plan.md) 已将五接口统一为 Mimir R，移除本地 Advice/ErrorResponse，业务异常为 HTTP 200 + 业务码、MVC 校验为 HTTP 400；70 个 standalone/序列化/追踪场景及包含 Mockito 套件的完整本地门禁已通过（209 项测试）。前端未改、真实消费链路未验证，不能关闭本条。
 
-历史 `CustomerApiIT` 曾断言 `$.code`，不能证明前端能正确消费；该测试已按用户要求移除。与 [Asgard 技术债清单](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md) 第 10 项对应同一跨项目问题。
+历史 `CustomerApiIT` 曾断言 `$.code`，不能证明前端能正确消费；该测试已按用户要求移除。与 [Asgard 错误契约债](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md#api-contract-r) 对应同一跨项目问题。
 
 **下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖成功、HTTP 200 + 20001/21001、400 校验、404 协议及 500 系统错误，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
 
