@@ -30,7 +30,6 @@
         <pmd.failOnViolation>true</pmd.failOnViolation>
         <cpd.failOnViolation>true</cpd.failOnViolation>
         <pmd.skipPmdError>false</pmd.skipPmdError>
-        <cola.components.version>5.0.0</cola.components.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
     </properties>
@@ -101,14 +100,6 @@
                 <groupId>io.github.yggdrasil-labs</groupId>
                 <artifactId>mimir-boot-bom</artifactId>
                 <version>${mimir-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.alibaba.cola</groupId>
-                <artifactId>cola-components-bom</artifactId>
-                <version>${cola.components.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

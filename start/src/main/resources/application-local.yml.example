@@ -12,3 +12,13 @@ spring:
 logging:
   level:
     io.yggdrasil.labs.midgard: debug
+
+# local/dev 默认只允许 http://localhost:5173；协议、主机和端口均精确匹配。
+# 如需额外来源，显式列出完整列表（覆盖默认值，不是追加）。
+# mimir:
+#   boot:
+#     web:
+#       cors:
+#         allowed-origins:
+#           - http://localhost:5173
+#           - http://127.0.0.1:5173

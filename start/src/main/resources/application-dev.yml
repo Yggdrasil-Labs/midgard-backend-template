@@ -7,5 +7,5 @@ spring:
 
 logging:
   level:
-    io.yggdrasil.labs.midgard.*: debug
+    io.yggdrasil.labs.midgard: debug
     root: info

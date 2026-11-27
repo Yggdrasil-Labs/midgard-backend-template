@@ -33,8 +33,8 @@
  * <p><b>类的职责：</b>
  *
  * <ul>
- *   <li>继承 com.alibaba.cola.dto.Query 基类
- *   <li>使用 @Data 和 @EqualsAndHashCode(callSuper = true) 注解
+ *   <li>使用普通契约对象，实现 java.io.Serializable 并声明 serialVersionUID
+ *   <li>按需使用 @Data 等注解，不要求继承框架 DTO 基类
  *   <li>定义查询条件和筛选字段
  *   <li>分页查询应包含分页参数（pageNum、pageSize 等）
  * </ul>

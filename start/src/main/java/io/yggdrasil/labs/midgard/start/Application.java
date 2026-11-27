@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * @author YoungerYang-Y
  */
-@SpringBootApplication(scanBasePackages = {"io.yggdrasil.labs.midgard", "com.alibaba.cola"})
+@SpringBootApplication(scanBasePackages = "io.yggdrasil.labs.midgard")
 @MapperScan("io.yggdrasil.labs.midgard.infrastructure.persistence.dataobject.mapper")
 public class Application {
 
