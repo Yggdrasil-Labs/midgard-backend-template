@@ -68,15 +68,24 @@ final class CustomerContractFixture implements AutoCloseable {
         customer.setName("张三");
         customer.setEmail("zhangsan@example.com");
         customer.setStatus("ACTIVE");
+        customer.setVersion(0);
         return customer;
     }
 
     String body(String name, String email, String phone) {
+        return fields(name, email, phone).toString();
+    }
+
+    String updateBody(String name, String email, String phone) {
+        return fields(name, email, phone).put("version", 0).toString();
+    }
+
+    private ObjectNode fields(String name, String email, String phone) {
         ObjectNode json = mapper.createObjectNode();
         json.put("name", name);
         json.put("email", email);
         json.put("phone", phone);
-        return json.toString();
+        return json;
     }
 
     JsonNode json(MvcResult result) throws Exception {

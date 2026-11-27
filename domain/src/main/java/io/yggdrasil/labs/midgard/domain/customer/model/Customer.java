@@ -1,5 +1,8 @@
 package io.yggdrasil.labs.midgard.domain.customer.model;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.yggdrasil.labs.common.exception.BizException;
@@ -13,13 +16,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
-public class Customer {
+public class Customer implements Serializable {
+
+    @Serial private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;
     private String email;
     private String phone;
     private CustomerStatus status;
+    private Integer version;
 
     private static final String EMAIL_REGEX = "^[\\w.+%-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
 
@@ -39,8 +45,9 @@ public class Customer {
         }
     }
 
-    /** 初始化新建客户的默认状态为启用。 */
+    /** 初始化新建客户的启用状态与初始版本。 */
     public void initForCreate() {
         this.status = CustomerStatus.ACTIVE;
+        this.version = 0;
     }
 }

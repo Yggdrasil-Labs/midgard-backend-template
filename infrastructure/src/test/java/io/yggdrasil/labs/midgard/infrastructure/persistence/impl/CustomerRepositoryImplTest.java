@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +34,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.page.PageRequest;
+import com.yggdrasil.labs.common.page.PageResult;
 
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
 import io.yggdrasil.labs.midgard.domain.customer.model.CustomerStatus;
@@ -96,20 +101,26 @@ class CustomerRepositoryImplTest {
     }
 
     @Test
-    void findAll_passesPaginationFiltersAndDescendingIdOrder() {
+    void findPage_passesPaginationFiltersAndDescendingIdOrder() {
         when(customerMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
                 .thenAnswer(
                         invocation -> {
                             Page<CustomerDO> page = invocation.getArgument(0);
                             page.setRecords(
                                     List.of(dataObject(9L, "Lin", "lin@example.com", "ACTIVE")));
+                            page.setTotal(2147483648L);
                             return page;
                         });
 
-        List<Customer> result = repository.findAll(2, 15, "lin", "ACTIVE");
+        PageResult<Customer> result = repository.findPage(PageRequest.of(2L, 15L), "lin", "ACTIVE");
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getId()).isEqualTo(9L);
+        assertThat(result.getData()).hasSize(1);
+        assertThat(result.getData().get(0).getId()).isEqualTo(9L);
+        assertThat(result.getTotalCount()).isEqualTo(2147483648L);
+        assertThat(result.getPageIndex()).isEqualTo(2L);
+        assertThat(result.getPageSize()).isEqualTo(15L);
+        assertThat(result.getHasPrevious()).isTrue();
+        verify(customerMapper, never()).selectCount(any());
         ArgumentCaptor<Page<CustomerDO>> pageCaptor = ArgumentCaptor.forClass(Page.class);
         ArgumentCaptor<LambdaQueryWrapper<CustomerDO>> queryCaptor =
                 ArgumentCaptor.forClass(LambdaQueryWrapper.class);
@@ -122,12 +133,12 @@ class CustomerRepositoryImplTest {
     }
 
     @Test
-    void findAll_ignoresNullAndBlankFilters() {
+    void findPage_ignoresNullAndBlankFilters() {
         when(customerMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThat(repository.findAll(1, 10, "  ", null)).isEmpty();
-        assertThat(repository.findAll(1, 10, null, " ")).isEmpty();
+        assertThat(repository.findPage(PageRequest.of(1L, 10L), "  ", null).getData()).isEmpty();
+        assertThat(repository.findPage(PageRequest.of(1L, 10L), null, " ").getData()).isEmpty();
 
         ArgumentCaptor<LambdaQueryWrapper<CustomerDO>> queryCaptor =
                 ArgumentCaptor.forClass(LambdaQueryWrapper.class);
@@ -142,25 +153,116 @@ class CustomerRepositoryImplTest {
     }
 
     @Test
-    void count_passesKeywordAndStatusFilters() {
-        when(customerMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(3L);
+    void update_rejectsDeletedRecordInsteadOfReturningFalseSuccess() {
+        Customer customer = customer(8L, "Lin", "lin@example.com", CustomerStatus.ACTIVE);
+        customer.setVersion(0);
 
-        long count = repository.count("lin", "INACTIVE");
+        assertThatThrownBy(() -> repository.update(customer))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        failure -> assertThat(failure.getCode()).isEqualTo("20001"));
+        assertThat(customer.getVersion()).isZero();
+    }
 
-        assertThat(count).isEqualTo(3L);
-        ArgumentCaptor<LambdaQueryWrapper<CustomerDO>> queryCaptor =
+    @Test
+    void update_usesLockingReadAndDoesNotBackfillVersionWhenConflicting() {
+        Customer customer = customer(8L, "Lin", "lin@example.com", CustomerStatus.ACTIVE);
+        when(customerMapper.updateById(any(CustomerDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            ((CustomerDO) invocation.getArgument(0)).setVersion(1);
+                            return 0;
+                        });
+        when(customerMapper.selectOne(any(LambdaQueryWrapper.class)))
+                .thenReturn(dataObject(8L, "Other", "other@example.com", "ACTIVE"));
+
+        assertThatThrownBy(() -> repository.update(customer))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        failure -> assertThat(failure.getCode()).isEqualTo("21002"));
+
+        assertThat(customer.getVersion()).isZero();
+        ArgumentCaptor<LambdaQueryWrapper<CustomerDO>> query =
                 ArgumentCaptor.forClass(LambdaQueryWrapper.class);
-        verify(customerMapper).selectCount(queryCaptor.capture());
-        queryCaptor.getValue().getSqlSegment();
-        assertThat(queryCaptor.getValue().getParamNameValuePairs().values())
-                .containsExactlyInAnyOrder("%lin%", "%lin%", "INACTIVE");
+        verify(customerMapper).selectOne(query.capture());
+        assertThat(query.getValue().getSqlSegment()).endsWith("FOR UPDATE");
+        assertThat(query.getValue().getParamNameValuePairs().values()).containsExactly(8L);
+        verify(customerMapper, never()).selectById(any());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, Integer.MAX_VALUE})
+    void update_rejectsInvalidVersionBeforeWriting(Integer version) {
+        Customer customer = customer(8L, "Lin", "lin@example.com", CustomerStatus.ACTIVE);
+        customer.setVersion(version);
+
+        assertThatThrownBy(() -> repository.update(customer))
+                .isInstanceOfSatisfying(
+                        BizException.class,
+                        failure -> assertThat(failure.getCode()).isEqualTo("00004"));
+        verify(customerMapper, never()).updateById(any(CustomerDO.class));
+        verify(customerMapper, never()).selectOne(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 2})
+    void update_rejectsUnexpectedRowCountsWithoutBackfilling(int affected) {
+        Customer customer = customer(8L, "Lin", "lin@example.com", CustomerStatus.ACTIVE);
+        when(customerMapper.updateById(any(CustomerDO.class))).thenReturn(affected);
+
+        assertThatThrownBy(() -> repository.update(customer))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(customer.getVersion()).isZero();
+        verify(customerMapper, never()).selectOne(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 2})
+    void save_rejectsUnexpectedRowCountsWithoutBackfilling(int affected) {
+        Customer customer = customer(null, "Lin", "lin@example.com", CustomerStatus.ACTIVE);
+        customer.setVersion(null);
+        when(customerMapper.insert(any(CustomerDO.class))).thenReturn(affected);
+
+        assertThatThrownBy(() -> repository.save(customer))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(customer.getId()).isNull();
+        assertThat(customer.getVersion()).isNull();
+    }
+
+    @Test
+    void findPage_correctsParametersAndKeepsEmptyOverflowPage() {
+        when(customerMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PageResult<Customer> corrected = repository.findPage(PageRequest.of(0L, 1001L), null, null);
+        assertThat(corrected.getPageIndex()).isEqualTo(1);
+        assertThat(corrected.getPageSize()).isEqualTo(1000);
+        assertThat(corrected.getTotalPages()).isZero();
+        assertThat(corrected.getHasNext()).isFalse();
+        assertThat(corrected.getHasPrevious()).isFalse();
+
+        PageResult<Customer> overflow = repository.findPage(PageRequest.of(3L, 10L), null, null);
+        assertThat(overflow.getPageIndex()).isEqualTo(3);
+        assertThat(overflow.getData()).isEmpty();
+        verify(customerMapper, never()).selectCount(any());
     }
 
     @Test
     void update_convertsAndPassesDataObjectToMapper() {
         Customer customer = customer(8L, "Lin", "lin@example.com", CustomerStatus.INACTIVE);
 
+        when(customerMapper.updateById(any(CustomerDO.class)))
+                .thenAnswer(
+                        invocation -> {
+                            CustomerDO updated = invocation.getArgument(0);
+                            updated.setVersion(updated.getVersion() + 1);
+                            return 1;
+                        });
+
         assertThat(repository.update(customer)).isSameAs(customer);
+        assertThat(customer.getVersion()).isEqualTo(1);
+        verify(customerMapper, never()).selectOne(any());
 
         ArgumentCaptor<CustomerDO> updated = ArgumentCaptor.forClass(CustomerDO.class);
         verify(customerMapper).updateById(updated.capture());
@@ -307,6 +409,7 @@ class CustomerRepositoryImplTest {
         customer.setName(name);
         customer.setEmail(email);
         customer.setStatus(status);
+        customer.setVersion(0);
         return customer;
     }
 
@@ -316,6 +419,7 @@ class CustomerRepositoryImplTest {
         dataObject.setName(name);
         dataObject.setEmail(email);
         dataObject.setStatus(status);
+        dataObject.setVersion(0);
         return dataObject;
     }
 }

@@ -1,8 +1,5 @@
 package io.yggdrasil.labs.midgard.app.customer.application;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,30 +56,22 @@ public class CustomerAppServiceImpl implements CustomerAppService {
         if (page.getPageIndex() > Integer.MAX_VALUE) {
             throw BizException.fromError(ErrorCode.PARAM_INVALID, "pageIndex超出支持范围");
         }
-        List<CustomerCO> records =
-                customerRepository
-                        .findAll(
-                                Math.toIntExact(page.getPageIndex()),
-                                Math.toIntExact(page.getPageSize()),
-                                qry.getKeyword(),
-                                qry.getStatus())
-                        .stream()
-                        .map(ASSEMBLER::toClientObject)
-                        .collect(Collectors.toList());
-        long total = customerRepository.count(qry.getKeyword(), qry.getStatus());
-        return PageResult.of(records, total, page.getPageIndex(), page.getPageSize());
+        return customerRepository
+                .findPage(page, qry.getKeyword(), qry.getStatus())
+                .map(ASSEMBLER::toClientObject);
     }
 
     @Override
     @Transactional
     public CustomerCO update(UpdateCustomerCmd cmd) {
-        if (cmd.getName() == null && cmd.getEmail() == null && cmd.getPhone() == null) {
-            throw BizException.fromError(ErrorCode.PARAM_INVALID, "至少一个字段不能为空");
-        }
+        validateUpdate(cmd);
         Customer customer =
                 customerRepository
                         .findById(cmd.getId())
                         .orElseThrow(() -> BizException.fromError(ErrorCode.DATA_NOT_FOUND));
+        if (!cmd.getVersion().equals(customer.getVersion())) {
+            throw BizException.fromError(CustomerErrorCode.VERSION_CONFLICT);
+        }
         if (cmd.getName() != null) customer.setName(cmd.getName());
         if (cmd.getEmail() != null) {
             if (!cmd.getEmail().equals(customer.getEmail())
@@ -93,8 +82,16 @@ public class CustomerAppServiceImpl implements CustomerAppService {
         }
         if (cmd.getPhone() != null) customer.setPhone(cmd.getPhone());
         customer.validate();
-        customerRepository.update(customer);
-        return ASSEMBLER.toClientObject(customer);
+        return ASSEMBLER.toClientObject(customerRepository.update(customer));
+    }
+
+    private void validateUpdate(UpdateCustomerCmd cmd) {
+        if (cmd.getVersion() == null || cmd.getVersion() < 0 || cmd.getVersion() > 2147483646) {
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "客户版本必须在0-2147483646之间");
+        }
+        if (cmd.getName() == null && cmd.getEmail() == null && cmd.getPhone() == null) {
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "至少一个字段不能为空");
+        }
     }
 
     @Override

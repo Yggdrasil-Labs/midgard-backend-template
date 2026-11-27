@@ -1,8 +1,6 @@
 package io.yggdrasil.labs.midgard.infrastructure.persistence.impl;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
@@ -10,6 +8,10 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.exception.ErrorCode;
+import com.yggdrasil.labs.common.page.PageRequest;
+import com.yggdrasil.labs.common.page.PageResult;
+import com.yggdrasil.labs.mybatis.page.PageConverters;
 
 import io.yggdrasil.labs.midgard.domain.customer.exception.CustomerErrorCode;
 import io.yggdrasil.labs.midgard.domain.customer.model.Customer;
@@ -30,12 +32,16 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     @Override
     public Customer save(Customer customer) {
         CustomerDO dataObject = CONVERTOR.toDataObject(customer);
+        dataObject.setVersion(0);
         try {
-            customerMapper.insert(dataObject);
+            if (customerMapper.insert(dataObject) != 1) {
+                throw new IllegalStateException("客户插入未影响一行");
+            }
         } catch (DataIntegrityViolationException exception) {
             throw translateWriteFailure(exception);
         }
         customer.setId(dataObject.getId());
+        customer.setVersion(dataObject.getVersion());
         return customer;
     }
 
@@ -46,18 +52,12 @@ public class CustomerRepositoryImpl implements CustomerRepository {
     }
 
     @Override
-    public List<Customer> findAll(int page, int size, String keyword, String status) {
+    public PageResult<Customer> findPage(PageRequest page, String keyword, String status) {
         LambdaQueryWrapper<CustomerDO> query =
                 buildQueryWrapper(keyword, status).orderByDesc(CustomerDO::getId);
-        Page<CustomerDO> pageResult = customerMapper.selectPage(new Page<>(page, size), query);
-        return pageResult.getRecords().stream()
-                .map(CONVERTOR::toEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public long count(String keyword, String status) {
-        return customerMapper.selectCount(buildQueryWrapper(keyword, status));
+        Page<CustomerDO> pageResult =
+                customerMapper.selectPage(PageConverters.toMybatisPage(page), query);
+        return PageConverters.toPageResult(pageResult.convert(CONVERTOR::toEntity));
     }
 
     private LambdaQueryWrapper<CustomerDO> buildQueryWrapper(String keyword, String status) {
@@ -77,12 +77,32 @@ public class CustomerRepositoryImpl implements CustomerRepository {
 
     @Override
     public Customer update(Customer customer) {
+        Integer version = customer.getVersion();
+        if (version == null || version < 0 || version == Integer.MAX_VALUE) {
+            throw BizException.fromError(ErrorCode.PARAM_INVALID, "version必须在0-2147483646之间");
+        }
         CustomerDO dataObject = CONVERTOR.toDataObject(customer);
+        int affected;
         try {
-            customerMapper.updateById(dataObject);
+            affected = customerMapper.updateById(dataObject);
         } catch (DataIntegrityViolationException exception) {
             throw translateWriteFailure(exception);
         }
+        if (affected == 0) {
+            CustomerDO current =
+                    customerMapper.selectOne(
+                            new LambdaQueryWrapper<CustomerDO>()
+                                    .eq(CustomerDO::getId, customer.getId())
+                                    .last("FOR UPDATE"));
+            if (current == null) {
+                throw BizException.fromError(ErrorCode.DATA_NOT_FOUND);
+            }
+            throw BizException.fromError(CustomerErrorCode.VERSION_CONFLICT);
+        }
+        if (affected != 1) {
+            throw new IllegalStateException("客户更新未影响一行");
+        }
+        customer.setVersion(dataObject.getVersion());
         return customer;
     }
 

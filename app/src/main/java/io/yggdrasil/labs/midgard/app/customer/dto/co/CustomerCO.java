@@ -16,4 +16,5 @@ public class CustomerCO implements Serializable {
     private String email;
     private String phone;
     private String status;
+    private Integer version;
 }

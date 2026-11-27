@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.page.PageRequest;
 import com.yggdrasil.labs.common.page.PageResult;
 
 import io.yggdrasil.labs.midgard.app.customer.dto.co.CustomerCO;
@@ -37,6 +38,7 @@ class CustomerPaginationTest {
         assertThat(result.getTotalCount()).isEqualTo(2147483648L);
         assertThat(result.getPageIndex()).isEqualTo(1);
         assertThat(result.getPageSize()).isEqualTo(1000);
+        assertThat(repository.calls).isEqualTo(1);
     }
 
     @Test
@@ -71,6 +73,37 @@ class CustomerPaginationTest {
         assertThat(repository.calls).isZero();
     }
 
+    @Test
+    void mapsRecordsIncludingVersionAndPreservesPageMetadata() {
+        PaginationRepository repository = new PaginationRepository();
+        Customer customer = new Customer();
+        customer.setId(12L);
+        customer.setName("张三");
+        customer.setVersion(3);
+        repository.records = List.of(customer);
+        repository.total = 23;
+        ListCustomerQry query = new ListCustomerQry();
+        query.setPageIndex(2L);
+
+        PageResult<CustomerCO> result = new CustomerAppServiceImpl(repository).list(query);
+
+        assertThat(result.getData())
+                .singleElement()
+                .satisfies(
+                        record -> {
+                            assertThat(record.getId()).isEqualTo(12L);
+                            assertThat(record.getName()).isEqualTo("张三");
+                            assertThat(record.getVersion()).isEqualTo(3);
+                        });
+        assertThat(result.getTotalCount()).isEqualTo(23L);
+        assertThat(result.getPageIndex()).isEqualTo(2L);
+        assertThat(result.getPageSize()).isEqualTo(10L);
+        assertThat(result.getTotalPages()).isEqualTo(3L);
+        assertThat(result.getHasNext()).isTrue();
+        assertThat(result.getHasPrevious()).isTrue();
+        assertThat(repository.calls).isEqualTo(1);
+    }
+
     private static final class PaginationRepository implements CustomerRepository {
         private int page;
         private int size;
@@ -78,23 +111,16 @@ class CustomerPaginationTest {
         private int calls;
         private String keyword;
         private String status;
+        private List<Customer> records = List.of();
 
         @Override
-        public List<Customer> findAll(int page, int size, String keyword, String status) {
-            this.page = page;
-            this.size = size;
+        public PageResult<Customer> findPage(PageRequest page, String keyword, String status) {
+            this.page = Math.toIntExact(page.getPageIndex());
+            this.size = Math.toIntExact(page.getPageSize());
             this.keyword = keyword;
             this.status = status;
             calls++;
-            return List.of();
-        }
-
-        @Override
-        public long count(String keyword, String status) {
-            assertThat(keyword).isEqualTo(this.keyword);
-            assertThat(status).isEqualTo(this.status);
-            calls++;
-            return total;
+            return PageResult.of(records, total, page.getPageIndex(), page.getPageSize());
         }
 
         @Override

@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import jakarta.validation.Validation;
@@ -17,11 +20,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.yggdrasil.labs.common.exception.BizException;
+import com.yggdrasil.labs.common.page.PageRequest;
+import com.yggdrasil.labs.common.page.PageResult;
 
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.CreateCustomerCmd;
 import io.yggdrasil.labs.midgard.app.customer.dto.cmd.UpdateCustomerCmd;
@@ -66,6 +72,7 @@ class CustomerAppServiceImplTest {
         assertEquals("张三", result.getName());
         assertEquals("zhangsan@example.com", result.getEmail());
         assertEquals("ACTIVE", result.getStatus());
+        assertEquals(0, result.getVersion());
     }
 
     @Test
@@ -103,10 +110,12 @@ class CustomerAppServiceImplTest {
         customer.setName("张三");
         customer.setEmail("z@example.com");
         customer.setStatus(CustomerStatus.ACTIVE);
+        customer.setVersion(6);
         when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(customer));
 
         CustomerCO result = service.getById(1L);
         assertEquals("张三", result.getName());
+        assertEquals(6, result.getVersion());
     }
 
     @Test
@@ -123,22 +132,114 @@ class CustomerAppServiceImplTest {
         qry.setPageSize(20L);
         qry.setKeyword("needle");
         qry.setStatus("ACTIVE");
-        when(customerRepository.findAll(2, 20, "needle", "ACTIVE")).thenReturn(java.util.List.of());
+        when(customerRepository.findPage(any(PageRequest.class), eq("needle"), eq("ACTIVE")))
+                .thenReturn(PageResult.empty(2L, 20L));
 
         service.list(qry);
 
-        verify(customerRepository).findAll(2, 20, "needle", "ACTIVE");
-        verify(customerRepository).count("needle", "ACTIVE");
+        verify(customerRepository).findPage(any(PageRequest.class), eq("needle"), eq("ACTIVE"));
+        verifyNoMoreInteractions(customerRepository);
+    }
+
+    @Test
+    void update_missingVersion_rejectedBeforeRepositoryAccess() {
+        UpdateCustomerCmd cmd = new UpdateCustomerCmd();
+        cmd.setId(1L);
+        cmd.setName("李四");
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verifyNoInteractions(customerRepository);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, Integer.MAX_VALUE})
+    void update_invalidVersion_rejectedBeforeRepositoryAccess(Integer version) {
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setVersion(version);
+        cmd.setPhone("");
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("00004", ex.getCode());
+        verifyNoInteractions(customerRepository);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, Integer.MAX_VALUE})
+    void command_rejectsInvalidVersionThroughBeanValidation(Integer version) {
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setVersion(version);
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            assertEquals(1, factory.getValidator().validateProperty(cmd, "version").size());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 2147483646})
+    void update_acceptsVersionBoundariesAndIncrementsSameValueUpdate(int version) {
+        Customer existing = existingCustomer();
+        existing.setVersion(version);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        stubSuccessfulUpdate();
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setVersion(version);
+        cmd.setName(existing.getName());
+
+        CustomerCO result = service.update(cmd);
+
+        assertEquals(version + 1, result.getVersion());
+        verify(customerRepository).update(existing);
+    }
+
+    @Test
+    void update_staleVersionPrecedesFieldChangesEmailCheckAndValidation() {
+        Customer existing = existingCustomer();
+        existing.setVersion(3);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setVersion(2);
+        cmd.setName("A");
+        cmd.setEmail("taken@example.com");
+        cmd.setPhone("");
+
+        BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
+
+        assertEquals("21002", ex.getCode());
+        assertEquals("张三", existing.getName());
+        assertEquals("z@example.com", existing.getEmail());
+        assertEquals("13800000000", existing.getPhone());
+        assertEquals(3, existing.getVersion());
+        verify(customerRepository, never()).existsByEmail(any());
+        verify(customerRepository, never()).update(any());
+    }
+
+    @Test
+    void update_returnsPersistedCustomerRatherThanThePreWriteObject() {
+        Customer existing = existingCustomer();
+        Customer persisted = existingCustomer();
+        persisted.setVersion(1);
+        when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        when(customerRepository.update(existing)).thenReturn(persisted);
+        UpdateCustomerCmd cmd = updateCommand();
+        cmd.setName(existing.getName());
+
+        CustomerCO result = service.update(cmd);
+
+        assertEquals(1, result.getVersion());
+        assertEquals(0, existing.getVersion());
     }
 
     @Test
     void update_success() {
         Customer existing = existingCustomer();
         when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
-        when(customerRepository.update(any())).thenAnswer(inv -> inv.getArgument(0));
+        stubSuccessfulUpdate();
 
-        UpdateCustomerCmd cmd = new UpdateCustomerCmd();
-        cmd.setId(1L);
+        UpdateCustomerCmd cmd = updateCommand();
         cmd.setName("李四");
         cmd.setEmail("new@example.com");
         cmd.setPhone("13900000000");
@@ -147,6 +248,7 @@ class CustomerAppServiceImplTest {
         assertEquals("李四", result.getName());
         assertEquals("new@example.com", result.getEmail());
         assertEquals("13900000000", result.getPhone());
+        assertEquals(1, result.getVersion());
         verify(customerRepository).update(existing);
         verify(customerRepository).existsByEmail("new@example.com");
     }
@@ -167,7 +269,7 @@ class CustomerAppServiceImplTest {
     void update_sameEmailDoesNotCheckEmailUniqueness() {
         Customer existing = existingCustomer();
         when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
-        when(customerRepository.update(any())).thenAnswer(inv -> inv.getArgument(0));
+        stubSuccessfulUpdate();
         UpdateCustomerCmd cmd = updateCommand();
         cmd.setEmail("z@example.com");
 
@@ -201,6 +303,7 @@ class CustomerAppServiceImplTest {
         when(customerRepository.findById(999L)).thenReturn(java.util.Optional.empty());
         UpdateCustomerCmd cmd = new UpdateCustomerCmd();
         cmd.setId(999L);
+        cmd.setVersion(0);
         cmd.setName("李四");
         BizException ex = assertThrows(BizException.class, () -> service.update(cmd));
         assertEquals("20001", ex.getCode());
@@ -260,6 +363,7 @@ class CustomerAppServiceImplTest {
     void update_acceptsEmail100AndPhoneNullEmptyOr20(String phone) {
         Customer existing = existingCustomer();
         when(customerRepository.findById(1L)).thenReturn(java.util.Optional.of(existing));
+        stubSuccessfulUpdate();
         UpdateCustomerCmd cmd = updateCommand();
         cmd.setEmail("a".repeat(50) + "@" + "d".repeat(45) + ".com");
         cmd.setPhone(phone);
@@ -336,12 +440,24 @@ class CustomerAppServiceImplTest {
         customer.setEmail("z@example.com");
         customer.setPhone("13800000000");
         customer.setStatus(CustomerStatus.ACTIVE);
+        customer.setVersion(0);
         return customer;
     }
 
     private UpdateCustomerCmd updateCommand() {
         UpdateCustomerCmd cmd = new UpdateCustomerCmd();
         cmd.setId(1L);
+        cmd.setVersion(0);
         return cmd;
+    }
+
+    private void stubSuccessfulUpdate() {
+        when(customerRepository.update(any()))
+                .thenAnswer(
+                        invocation -> {
+                            Customer customer = invocation.getArgument(0);
+                            customer.setVersion(customer.getVersion() + 1);
+                            return customer;
+                        });
     }
 }

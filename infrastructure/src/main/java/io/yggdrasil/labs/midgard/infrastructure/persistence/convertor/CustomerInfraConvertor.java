@@ -17,6 +17,10 @@ public interface CustomerInfraConvertor {
 
     /** 将客户领域对象转换为数据库记录，空对象返回空值。 */
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
+    @Mapping(target = "createTime", ignore = true)
+    @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "createBy", ignore = true)
+    @Mapping(target = "updateBy", ignore = true)
     CustomerDO toDataObject(Customer entity);
 
     /** 将数据库记录转换为客户领域对象，空对象返回空值。 */

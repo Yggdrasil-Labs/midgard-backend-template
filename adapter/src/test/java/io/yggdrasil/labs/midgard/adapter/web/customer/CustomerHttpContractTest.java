@@ -66,6 +66,8 @@ class CustomerHttpContractTest {
         assertThat(json.path("data").path("name").asText()).isEqualTo("张三");
         assertThat(json.path("data").path("email").asText()).isEqualTo("zhangsan@example.com");
         assertThat(json.path("data").path("status").asText()).isEqualTo("ACTIVE");
+        assertThat(json.path("data").path("version").isIntegralNumber()).isTrue();
+        assertThat(json.path("data").path("version").asInt()).isZero();
         assertThat(fixture.service.calls).isEqualTo(1);
     }
 
@@ -83,6 +85,8 @@ class CustomerHttpContractTest {
         assertThat(json.path("data").path("id").asLong()).isEqualTo(42L);
         assertThat(json.path("data").has("phone")).isTrue();
         assertThat(json.path("data").path("phone").isNull()).isTrue();
+        assertThat(json.path("data").path("version").isIntegralNumber()).isTrue();
+        assertThat(json.path("data").path("version").asInt()).isZero();
         assertThat(fixture.service.id).isEqualTo(42L);
     }
 
@@ -101,30 +105,136 @@ class CustomerHttpContractTest {
     }
 
     @Test
-    void update_partialRequestBindsPathIdAndLeavesMissingFieldsNull() throws Exception {
-        fixture.service.result.setName("李四");
+    void update_rejectsMissingVersionWithoutCallingApp() throws Exception {
         JsonNode json =
                 fixture.json(
                         fixture.mvc
                                 .perform(
                                         put("/api/customers/42")
                                                 .contentType(MediaType.APPLICATION_JSON)
-                                                .content("{\"name\":\"李四\"}"))
+                                                .content("{\"phone\":\"\"}"))
+                                .andExpect(status().isBadRequest())
+                                .andReturn());
+
+        CustomerContractFixture.validationError(json, "FIELD", "version", "NotNull");
+        assertThat(fixture.service.calls).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "0.5",
+                "3.5",
+                "3.0",
+                "1e0",
+                "\"3\"",
+                "true",
+                "false",
+                "2147483648",
+                "-2147483649",
+                "9999999999999999999999999999",
+                "[]",
+                "{}"
+            })
+    void update_rejectsNonIntegerVersionBeforeCallingApp(String version) throws Exception {
+        JsonNode json =
+                fixture.json(
+                        fixture.mvc
+                                .perform(
+                                        put("/api/customers/42")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(
+                                                        "{\"version\":"
+                                                                + version
+                                                                + ",\"phone\":\"\"}"))
+                                .andExpect(status().isBadRequest())
+                                .andReturn());
+
+        CustomerContractFixture.assertEnvelope(json, "00004", false);
+        CustomerContractFixture.assertNullData(json);
+        assertThat(json.path("message").asText()).isEqualTo("请求体格式错误");
+        assertThat(fixture.service.calls).isZero();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"null, NotNull", "-1, Min", "2147483647, Max"})
+    void update_rejectsInvalidVersionAsStructuredFieldError(String version, String constraint)
+            throws Exception {
+        JsonNode json =
+                fixture.json(
+                        fixture.mvc
+                                .perform(
+                                        put("/api/customers/42")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(
+                                                        "{\"version\":"
+                                                                + version
+                                                                + ",\"phone\":\"\"}"))
+                                .andExpect(status().isBadRequest())
+                                .andReturn());
+
+        CustomerContractFixture.validationError(json, "FIELD", "version", constraint);
+        assertThat(fixture.service.calls).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 2147483646})
+    void update_acceptsVersionBoundariesAndReturnsIntegerVersion(int version) throws Exception {
+        fixture.service.result.setVersion(version + 1);
+
+        JsonNode json =
+                fixture.json(
+                        fixture.mvc
+                                .perform(
+                                        put("/api/customers/42")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(
+                                                        "{\"version\":"
+                                                                + version
+                                                                + ",\"phone\":\"\"}"))
+                                .andExpect(status().isOk())
+                                .andReturn());
+
+        CustomerContractFixture.assertEnvelope(json, "00000", true);
+        assertThat(fixture.service.updated.getVersion()).isEqualTo(version);
+        assertThat(json.path("data").path("version").isIntegralNumber()).isTrue();
+        assertThat(json.path("data").path("version").asInt()).isEqualTo(version + 1);
+    }
+
+    @Test
+    void update_partialRequestBindsPathIdAndLeavesMissingFieldsNull() throws Exception {
+        fixture.service.result.setName("李四");
+        fixture.service.result.setVersion(1);
+        JsonNode json =
+                fixture.json(
+                        fixture.mvc
+                                .perform(
+                                        put("/api/customers/42")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content("{\"version\":0,\"name\":\"李四\"}"))
                                 .andExpect(status().isOk())
                                 .andReturn());
 
         CustomerContractFixture.assertEnvelope(json, "00000", true);
         assertThat(json.path("data").path("name").asText()).isEqualTo("李四");
+        assertThat(json.path("data").path("version").isIntegralNumber()).isTrue();
+        assertThat(json.path("data").path("version").asInt()).isEqualTo(1);
         assertThat(fixture.service.updated.getId()).isEqualTo(42L);
         assertThat(fixture.service.updated.getName()).isEqualTo("李四");
         assertThat(fixture.service.updated.getEmail()).isNull();
         assertThat(fixture.service.updated.getPhone()).isNull();
+        assertThat(fixture.service.updated.getVersion()).isZero();
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"{\"phone\":\"\"}", "{\"name\":null,\"email\":null,\"phone\":\"\"}"})
+    @ValueSource(
+            strings = {
+                "{\"version\":0,\"phone\":\"\"}",
+                "{\"version\":0,\"name\":null,\"email\":null,\"phone\":\"\"}"
+            })
     void update_emptyPhoneAloneIsValidClearRequest(String body) throws Exception {
         fixture.service.result.setPhone("");
+        fixture.service.result.setVersion(1);
         JsonNode json =
                 fixture.json(
                         fixture.mvc
@@ -140,6 +250,7 @@ class CustomerHttpContractTest {
         assertThat(fixture.service.updated.getPhone()).isEmpty();
         assertThat(fixture.service.updated.getName()).isNull();
         assertThat(fixture.service.updated.getEmail()).isNull();
+        assertThat(fixture.service.updated.getVersion()).isZero();
     }
 
     @Test
@@ -180,6 +291,8 @@ class CustomerHttpContractTest {
         assertThat(page.path("data").isArray()).isTrue();
         assertThat(page.path("data").size()).isEqualTo(1);
         assertThat(page.path("data").get(0).path("id").asLong()).isEqualTo(42L);
+        assertThat(page.path("data").get(0).path("version").isIntegralNumber()).isTrue();
+        assertThat(page.path("data").get(0).path("version").asInt()).isZero();
         assertThat(page.path("totalCount").isIntegralNumber()).isTrue();
         assertThat(page.path("totalCount").asLong()).isEqualTo(total);
         assertThat(page.path("pageIndex").asLong()).isEqualTo(2L);
@@ -263,7 +376,7 @@ class CustomerHttpContractTest {
                 .perform(
                         put("/api/customers/42")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(body))
+                                .content(fixture.updateBody("张三", email, phone)))
                 .andExpect(status().isOk());
 
         assertThat(fixture.service.created.getEmail()).isEqualTo(email);
@@ -310,6 +423,9 @@ class CustomerHttpContractTest {
         ObjectNode body =
                 (ObjectNode) fixture.mapper.readTree(fixture.body("张三", "valid@example.com", null));
         body.put(field, value);
+        if (method.equals("PUT")) {
+            body.put("version", 0);
+        }
         String path = method.equals("POST") ? "/api/customers" : "/api/customers/42";
 
         JsonNode json =
@@ -350,7 +466,13 @@ class CustomerHttpContractTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"{}", "{\"name\":null,\"email\":null,\"phone\":null}"})
+    @ValueSource(
+            strings = {
+                "{}",
+                "{\"name\":null,\"email\":null,\"phone\":null}",
+                "{\"version\":0}",
+                "{\"version\":0,\"name\":null,\"email\":null,\"phone\":null}"
+            })
     void update_allMissingOrNullIsObjectError(String body) throws Exception {
         JsonNode json =
                 fixture.json(
@@ -401,7 +523,7 @@ class CustomerHttpContractTest {
                                                         HttpMethod.valueOf(method),
                                                         "/api/customers/invalid")
                                                 .contentType(MediaType.APPLICATION_JSON)
-                                                .content("{\"name\":\"李四\"}"))
+                                                .content("{\"version\":0,\"name\":\"李四\"}"))
                                 .andExpect(status().isBadRequest())
                                 .andReturn());
 
@@ -423,8 +545,15 @@ class CustomerHttpContractTest {
                                         request(HttpMethod.valueOf(method), path)
                                                 .contentType(MediaType.APPLICATION_JSON)
                                                 .content(
-                                                        fixture.body(
-                                                                "张三", "valid@example.com", null)))
+                                                        method.equals("PUT")
+                                                                ? fixture.updateBody(
+                                                                        "张三",
+                                                                        "valid@example.com",
+                                                                        null)
+                                                                : fixture.body(
+                                                                        "张三",
+                                                                        "valid@example.com",
+                                                                        null)))
                                 .andExpect(status().isOk())
                                 .andReturn());
 
@@ -447,13 +576,13 @@ class CustomerHttpContractTest {
 
     @ParameterizedTest
     @MethodSource("unknownFailures")
-    void unknownFailure_returnsSafe500(RuntimeException failure) throws Exception {
+    void unknownFailure_returnsSafe500(String path, RuntimeException failure) throws Exception {
         fixture.service.failure = failure;
 
         JsonNode json =
                 fixture.json(
                         fixture.mvc
-                                .perform(get("/api/customers/42"))
+                                .perform(get(path))
                                 .andExpect(status().isInternalServerError())
                                 .andReturn());
 
@@ -470,11 +599,16 @@ class CustomerHttpContractTest {
                         "DataIntegrityViolationException");
     }
 
-    private static Stream<RuntimeException> unknownFailures() {
+    private static Stream<Arguments> unknownFailures() {
         String sensitive = "SELECT password FROM customer; jdbc:mysql://private-host/private-db";
         return Stream.of(
-                new IllegalStateException(sensitive),
-                new DataIntegrityViolationException(sensitive),
-                new DataIntegrityViolationException((String) null));
+                        new IllegalStateException(sensitive),
+                        new DataIntegrityViolationException(sensitive),
+                        new DataIntegrityViolationException((String) null))
+                .flatMap(
+                        failure ->
+                                Stream.of(
+                                        Arguments.of("/api/customers/42", failure),
+                                        Arguments.of("/api/customers", failure)));
     }
 }

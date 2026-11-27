@@ -4,6 +4,9 @@ import java.io.Serial;
 import java.io.Serializable;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import lombok.Data;
@@ -15,6 +18,11 @@ public class UpdateCustomerCmd implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
     private Long id;
+
+    @NotNull(message = "客户版本不能为空")
+    @Min(value = 0, message = "客户版本不能为负数")
+    @Max(value = 2147483646, message = "客户版本不能超过2147483646")
+    private Integer version;
 
     @Size(min = 2, max = 50, message = "客户名称长度必须在2-50之间")
     private String name;

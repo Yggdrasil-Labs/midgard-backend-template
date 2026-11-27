@@ -56,15 +56,18 @@ class CustomerResponseSerializationTest {
         assertThat(defaults.getSerialization().isWriteLargeIntegersAsString()).isFalse();
         CustomerCO customer = CustomerContractFixture.customer();
         customer.setId(Long.MAX_VALUE);
+        customer.setVersion(Integer.MAX_VALUE);
 
         JsonNode json = mapper.readTree(mapper.writeValueAsString(R.success(customer)));
 
         CustomerContractFixture.assertEnvelope(json, "00000", true);
-        assertThat(json.path("data").size()).isEqualTo(5);
+        assertThat(json.path("data").size()).isEqualTo(6);
         assertThat(json.path("data").path("id").isIntegralNumber()).isTrue();
         assertThat(json.path("data").path("id").asLong()).isEqualTo(Long.MAX_VALUE);
         assertThat(json.path("data").has("phone")).isTrue();
         assertThat(json.path("data").path("phone").isNull()).isTrue();
+        assertThat(json.path("data").path("version").isIntegralNumber()).isTrue();
+        assertThat(json.path("data").path("version").asInt()).isEqualTo(Integer.MAX_VALUE);
     }
 
     @ParameterizedTest
@@ -100,6 +103,8 @@ class CustomerResponseSerializationTest {
         assertThat(data.size()).isEqualTo(7);
         assertThat(data.path("data").isArray()).isTrue();
         assertThat(data.path("data").size()).isEqualTo(1);
+        assertThat(data.path("data").get(0).path("version").isIntegralNumber()).isTrue();
+        assertThat(data.path("data").get(0).path("version").asInt()).isZero();
         assertThat(data.path("totalCount").asLong()).isEqualTo(4294967296L);
         assertThat(data.path("pageIndex").asLong()).isEqualTo(2L);
         assertThat(data.path("pageSize").asLong()).isEqualTo(10L);

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.Serializable;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -146,6 +148,25 @@ class CustomerTest {
     }
 
     // ===== initForCreate() =====
+
+    @Test
+    void customer_shouldSupportSerializablePageResults() {
+        assertThat(customer).isInstanceOf(Serializable.class);
+    }
+
+    @Test
+    void version_shouldRemainNullUntilInitialized() {
+        assertThat(customer.getVersion()).isNull();
+    }
+
+    @Test
+    void initForCreate_shouldInitializeVersionToZero() {
+        customer.setVersion(5);
+
+        customer.initForCreate();
+
+        assertThat(customer.getVersion()).isZero();
+    }
 
     @Test
     void initForCreate_shouldSetStatusToActive() {
