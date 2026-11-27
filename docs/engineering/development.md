@@ -42,6 +42,14 @@
 - 验证需区分资源打包与真实数据库迁移；检查包内脚本不能代替空库初始化、已有库迁移及 Flyway 校验。
 - 1.3.0 客户 V2 会重命名审计时间列并新增版本，必须停止旧实例及写流量后升级。迁移前按[数据一致性设计](../active/1.3.0/data-consistency/design.md#数据模型与迁移b1b3)比较实际结构与 V1 预期 DDL，结构漂移立即停止；Flyway validate 不能代替结构比对。迁移/恢复和运行验收按[人工步骤](../active/1.3.0/data-consistency/plan.md#t5专用环境人工迁移并发与消费验收)执行，未验收时不记为数据库可用。
 
+## 运行时配置
+
+- 日志由 `logging.config=classpath:com/yggdrasil/labs/log/logback/container.xml` 显式选定，默认文本、标准输出，不配置文件日志。消息及异常链使用四组凭据脱敏；路径/IP/User-Agent 等不能视为已全面脱敏，勿新增真实凭据或请求体日志。
+- 未显式选择 profile 时默认激活 local。local/dev 应用日志 DEBUG，test 为 INFO，prod 为 WARN；`access.log` 保持 INFO。开启 dev/prod 混合 profile 时，开发 CORS 关闭，日志级别仍依实际配置优先级解析。
+- 开发跨域只在 `(local | dev) & !test & !prod` 时启用，默认允许 `http://localhost:5173`，作用于框架固定 `/**`。`127.0.0.1`、其他协议或端口需加入 `mimir.boot.web.cors.allowed-origins` 的完整覆盖列表，示例见 `application-local.yml.example`；不再接受 localhost 任意端口。不要覆盖用户已有 local 文件，先核对其显式设置。
+- 对允许的开发 Origin，保留凭据、Content-Disposition 暴露并新增 X-Trace-Id。生产/测试默认不提供开发 CORS 响应头；启用但空白名单或 `*`+凭据为配置错误，不提供宽松 fallback。
+- 客户响应头/体及请求处理期日志沿用 Mimir Trace 组件；终态访问日志可能在 MVC 恢复 MDC 后写入，不承诺它含相同 traceId。自动配置、过滤器顺序、真实启动及浏览器读取仍须专用环境验收，详见[设计](../active/1.3.0/mimir-runtime-adoption/design.md)和[人工步骤](../active/1.3.0/mimir-runtime-adoption/plan.md#t4运行验收与说明同步)。
+
 ## 按改动验证
 
 ### 测试范围

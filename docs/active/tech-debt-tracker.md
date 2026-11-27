@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-27
+updated: 2026-11-28
 ---
 
 # Tech Debt Tracker
@@ -15,7 +15,7 @@ updated: 2026-11-27
 
 ## 状态总览
 
-当前 **10 项开放（6 项 P1、4 项 P2）、1 项待验证、2 项关闭**。没有证据充分的 P0 事项。
+当前 **11 项开放（6 项 P1、5 项 P2）、1 项待验证、2 项关闭**。没有证据充分的 P0 事项。
 
 - **P1**：存在明确功能缺口、数据一致性或构建发布风险，优先处理。
 - **P2**：主要增加维护成本或削弱防回归保障，可排在 P1 之后。
@@ -33,6 +33,7 @@ updated: 2026-11-27
 | TD-002 | P2 | 开放 | 数据库结构参考文档缺失 | 数据源 / 生成流程 |
 | TD-012 | P2 | 开放（副本已清理，待验收） | 数据库迁移脚本有两份手工副本 | 数据库迁移 / 构建 |
 | TD-013 | P2 | 开放 | 架构测试未覆盖部分已声明边界 | ArchitectureTest |
+| TD-014 | P2 | 开放（本地已实现，待运行验收） | 运行时配置与组件未收敛到 Mimir | 日志 / CORS / COLA 组件 / Bean 装配 |
 | TD-011 | 待定 | 待验证 | 两个全局异常 Advice 的职责与顺序未核验 | Adapter / Mimir Exception Starter |
 
 ## 优先处理项
@@ -126,6 +127,16 @@ updated: 2026-11-27
 **证据与影响**：[ARCHITECTURE](../../ARCHITECTURE.md) 明确禁止 Domain 依赖 client 或数据库映射；[ArchitectureTest](../../start/src/test/java/io/yggdrasil/labs/midgard/start/ArchitectureTest.java) 仅定义 Start、Adapter、App、Domain、Infrastructure 五层，未将 Client 作为被约束目标，也没有校验 Domain 的持久化注解或框架依赖。因此现有层间测试不能完整执行这些约束。
 
 **下一步与关闭条件**：为已声明但未覆盖的边界增加针对性规则；用最小违规夹具分别证明 Domain→Client 和持久化映射注解能被拒绝，同时当前合法代码仍通过。此项描述的是防回归缺口，不代表当前 Domain 已存在违规。
+
+### TD-014：运行时配置与组件未收敛到 Mimir
+
+**原问题（2026-11-27，基线 5246d96）**：Start 已依赖 Mimir Log/Web 2.4.0，但原 `start/src/main/resources/logback-spring.xml` 使用本地 `%msg` 控制台格式，原 Adapter `web/CorsConfig.java` 在所有 profile 声明 localhost 任意端口；四项 COLA 组件及根 BOM、Application 包扫描仍保留，application.yml 允许 Bean 覆盖。该基线的业务源码已无 COLA 类型使用，Client 三处 package-info 仍指导继承其 DTO 基类。
+
+**影响与方案**：重复配置掩盖框架能力与装配边界，未显式区分开发跨域环境；这不证明实际泄露或 Bean 冲突已发生。已建立 [1.3.0 mimir-runtime-adoption](1.3.0/mimir-runtime-adoption/plan.md) 方案，采用显式 container/text 日志、明确来源的开发 CORS、组件清理及覆盖关闭；实际实施与验证进度集中见[版本记录](1.3.0/release.md)，不以方案就绪代替运行证据。
+
+**本地进展（2026-11-28）**：组件与包扫描已清理，本地 XML/CORS 已移除；显式 container/text、精确来源 CORS、Bean 覆盖关闭已配置。隔离回归、完整门禁、依赖树/JAR 和独立代码审查已通过，计数与命令集中见版本记录；实际启动/日志/CORS/追踪/浏览器运行证据仍待补，本条保持开放。
+
+**关闭条件**：实际依赖树/JAR 无 COLA 组件，重复本地 XML/CORS 已清理；本地隔离回归与质量门禁通过，并取得专用环境的启动无覆盖、日志输出/脱敏、访问记录、profile CORS 与客户响应追踪证据。终态 access traceId 受框架时序限制，不将其完整关联列为本项保证；具体范围见设计。远端 CI 与前端消费状态单列，未取得运行证据时保留开放。
 
 ## 待验证项
 

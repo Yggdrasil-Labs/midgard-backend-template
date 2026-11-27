@@ -3,7 +3,7 @@
 ## 版本摘要
 
 - **版本**：1.3.0
-- **状态**：实施中（升级门禁、error-contract-r 与 data-consistency 已实现且本地门禁通过，远端 CI 待验收；data-consistency 的真实数据库/应用验收待补，其余需求未开始）
+- **状态**：实施中（升级门禁、error-contract-r、data-consistency 与 mimir-runtime-adoption 已实现且本地门禁通过；真实数据库/应用、浏览器与远端 CI 验收另计，其余需求未开始）
 - **目标**：围绕消除技术债提升项目质量（文档、架构、测试、构建脚本、基础能力），以 Mimir Boot 2.4.0 能力替换本地重复实现。
 - **前置条件**：Mimir Boot 2.4.0 已正式发布（2026-11-20 已核实 Release、发布流水线及 Central 主要制品可下载）。本版本所有需求以 2.4.0 正式版能力为准；本项目非容器门禁已验证，完整应用与数据库集成仍待验收。
 - **跨项目协同**：Asgard 前端同步建立 1.3.0，对接本版本的 API 契约；契约规则见 [HTTP API 响应与错误契约](../../design-docs/arch-api-contract.md)。
@@ -17,7 +17,7 @@
 | mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；项目仅维护单元/架构测试；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 已实现；集成测试范围已取消，清理后本地复验见下文，远端 CI 待验收 |
 | error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 已实现，已本地提交为 56a8716；本地完整门禁通过，运行环境及跨项目证据另计 |
 | data-consistency | [需求约定](data-consistency/spec.md) · [设计](data-consistency/design.md) · [实施计划](data-consistency/plan.md) | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 已实现，已本地提交为 7ec180b；本地完整门禁与独立代码审查通过，真实数据库/应用验收待补 |
-| mimir-runtime-adoption | `1.3.0/mimir-runtime-adoption/` | 采用 Mimir 日志配置；移除全部 COLA 组件依赖与 cola 包扫描；关闭 Bean 覆盖；CORS 改用 Mimir 配置并暴露 `X-Trace-Id` | TD-014（待登记） | mimir-upgrade-gates；移除 COLA dto/exception 依赖 error-contract-r | 未开始 |
+| mimir-runtime-adoption | [需求约定](mimir-runtime-adoption/spec.md) · [设计](mimir-runtime-adoption/design.md) · [实施计划](mimir-runtime-adoption/plan.md) | 显式采用 Mimir 控制台日志预设；移除 COLA 组件与扫描；关闭 Bean 覆盖；开发 CORS 使用明确来源并暴露 `X-Trace-Id` | TD-014 | mimir-upgrade-gates、error-contract-r（本地已满足） | 已实现，已本地提交为 5065183；本地完整门禁与独立代码审查通过，真实运行验收待补 |
 | arch-test-adoption | `1.3.0/arch-test-adoption/` | 架构测试改用 `ColaArchRules` 与 Mimir 测试基类；最小违规夹具证明规则生效 | TD-013 | mimir-upgrade-gates | 未开始 |
 | release-hardening | `1.3.0/release-hardening/` | 构建凭据改用 BuildKit secret；Release 增加版本单调与并发协调；fork 演练验收 | TD-007、TD-008 | 无 | 未开始 |
 | docs-consistency | `1.3.0/docs-consistency/` | 文档链接与索引检查接入 CI；由迁移生成数据库结构文档；同步技术债清单 | TD-001、TD-002 | data-consistency | 未开始 |
@@ -50,10 +50,10 @@
 
 **mimir-runtime-adoption**
 
-- 删除 `logback-spring.xml`，由 `mimir.boot.log.*` 配置；移除 `cola-component-catchlog-starter` 依赖与 `scanBasePackages` 中的 `com.alibaba.cola`；`allow-bean-definition-overriding` 设为 false。
-- 删除本地 `CorsConfig`，改用 `mimir.boot.web.cors.*`，仅 dev/local 开启，暴露头包含 `X-Trace-Id`。
-- 移除全部 COLA 组件依赖：`cola-component-dto`（client）、`cola-component-exception` 与 `cola-component-domain-starter`（domain）、`cola-component-catchlog-starter`（app），组件清空后移除根 POM 的 `cola-components-bom`；domain 改为依赖 `mimir-boot-common`。保留 COLA 分层架构理念。实施前核对 `cola-component-domain-starter` 无实际使用（当前 domain 源码仅引用 COLA `BizException`），且移除 dto 和 exception 须在 error-contract-r 完成替换之后。
-- 验收：日志含 traceId，访问日志与脱敏生效；响应头与响应体 traceId 一致；应用上下文启动且无 Bean 覆盖。
+- 删除本地 XML 的同时显式选择 Mimir `container.xml` 与 text，保留标准输出、四组凭据脱敏及访问日志；精确配置与 profile 矩阵由[设计](mimir-runtime-adoption/design.md)维护，不能仅删除文件而落回 starter 的旧日志配置。
+- 删除本地 CorsConfig，采用 Mimir 明确 Origin 白名单；默认 localhost:5173，仅 local/dev 且没有 test/prod 时开启。原 `/api/**` 范围变为框架固定 `/**`，localhost 任意端口兼容取消；Content-Disposition 保留并新增 X-Trace-Id 暴露。
+- 移除 client 的 dto、domain 的 exception/domain-starter、app 的 catchlog-starter 及根 COLA BOM/property；清理扫描和相关基类说明，保留 COLA 分层理念。error-contract-r 已替换异常/DTO 调用，Domain 已依赖 mimir-boot-common，不重复添加。
+- 关闭 Bean 覆盖。分别验收请求处理期日志关联、消息/异常脱敏、访问记录内容，以及客户 HTTP 头/体 traceId 一致；终态 access 日志可能在 MDC 恢复后写入，不承诺其 traceId 一致。完整启动和实际过滤器顺序由专用环境人工验收，不新增项目集成测试。
 
 **arch-test-adoption**
 
@@ -72,7 +72,7 @@
 
 - CI 增加 Markdown 链接与索引检查，失效链接使检查失败。
 - 增加数据库结构文档生成方式：在专用临时 MySQL 实例执行迁移后，从 `information_schema` 导出到 `docs/generated/db-schema.md`，记录生成命令；该生成流程不依赖项目集成测试或 Testcontainers。
-- 技术债清单：关闭本版本满足关闭条件的条目，登记 TD-014（运行时配置未采用 Mimir 能力：日志、CORS、COLA 组件、Bean 覆盖）与 TD-015（CO/Cmd/Qry 是否迁入 client 模块）。
+- 技术债清单：关闭本版本满足关闭条件的条目，核对已登记的 TD-014（运行时配置与组件）及登记 TD-015（CO/Cmd/Qry 是否迁入 client 模块）。
 
 ## 独立交付
 
@@ -147,6 +147,25 @@
 - 四业务模块实际通过 60% 指令/50% 分支阈值；Client 无可计量实现、Start Application 被继承规则排除，不把二者记为覆盖率达标。全部测试仍为单元、standalone/受管序列化与 ArchUnit，没有新增 Spring 上下文或外部 I/O 集成测试。
 - **独立审查与文件验证**：持久化/迁移和 App/Adapter 分别完成独立代码审查，未发现实质缺陷，综合 PASS（4.0/5）。真实 Mapper SQL/乐观锁插件的纯单元测试验证版本条件、预增、创建审计字段保护、锁查询 SQL 与无二级缓存；这些不证明真实数据库锁/事务行为。普通及可执行 JAR 各含一份字节一致的 V1/V2，本次文档链接/锚点与差异检查通过。
 - **剩余验收**：未执行真实 MySQL 空库初始化、V1→V2/Flyway validate、RR 受控交错、实际 Spring 装配或 HTTP 数据库链路；远端 CI、Asgard/Bifrost 消费亦未验证。按计划 T5 在明确授权的专用环境执行；迁移前实际结构须与 V1 预期 DDL 比对，含 idx_email 缺失的拒绝预演。TD-005/TD-012 保持开放，不以源码、打包或隔离测试关闭。本批已分阶段本地提交，未推送。
+
+### mimir-runtime-adoption（2026-11-28）
+
+- **实现范围**：移除四项 COLA 组件、根 BOM/property、包扫描与 Client 基类说明，保留 COLA 分层理念及 MapperScan。删除本地日志 XML/CORS，显式选择 Mimir container/text、四组凭据脱敏、访问日志及精确 logger 级别；关闭 Bean 覆盖。客户 API/version、V1/V2、依赖版本及发布配置不变。
+- **配置边界**：默认激活 local（应用 DEBUG、开发 CORS 开）；仅 `(local | dev) & !test & !prod` 启用 CORS。默认明确 Origin 为 http://localhost:5173，框架路径为 `/**`，不保留 localhost 任意端口；保留原方法/凭据/Content-Disposition 并暴露 X-Trace-Id。已有用户 local 文件未改。请求处理期日志与响应追踪沿用框架，终态访问日志不承诺有相同 traceId。
+- **环境与聚焦验证**：基线 5246d96，方案已本地提交为 1bdfeb5、实现已本地提交为 5065183；WSL、Temurin 17.0.21.1、项目 Maven Wrapper、Mimir 2.4.0。先确认旧配置缺失 logging.config 的预期断言失败（1 failure、0 errors），配置后 Green；随后新增 runtime 3 套 **38 项**隔离测试通过，真实 EPP/Filter/converter 均使用公开入口。日志为 `/tmp/midgard-runtime-config-red.log`、`/tmp/midgard-runtime-config-green.log`、`/tmp/midgard-runtime-tests.log`。
+- **测试边界**：YAML helper 仅验证受控 profile 文档选择与 Binder，不冒充实际 ConfigData/自动注册；日志转换器用单独 classloader 隔离上游静态快照，Logback API 共用，局部内存 Context/事件不修改全局规则，访问 logger/MDC 在测试后恢复。没有新增 Spring 上下文、数据库、浏览器、服务器或磁盘日志集成测试；真实装配与实际 stdout 仍待验收。
+- **完整本地门禁**：`./mvnw -o -B -ntp -Pprecheck clean verify`、`./mvnw -o -B -ntp -Pci clean verify` 均成功，无 skipTests/skipITs/jacoco.skip。最终干净构建共 **17 套、312 项测试，0 失败、0 错误、0 跳过**；此前 274 项有效用例保留。Spotless、Enforcer、覆盖率及 **24 份生产/测试 PMD/CPD XML** 均通过，无违规、重复或处理错误；日志为 `/tmp/midgard-runtime-precheck.log`、`/tmp/midgard-runtime-ci.log`。Mockito 测试使用准确离线命令的沙箱外 self-attach 权限，未改 MockMaker/javaagent。
+
+| 模块 | 本次指令覆盖率 | 本次分支覆盖率 |
+| --- | --- | --- |
+| Domain | 100.00% | 100.00% |
+| App | 98.51% | 91.18% |
+| Adapter | 91.18% | 85.71% |
+| Infrastructure | 99.28% | 98.39% |
+
+- 四业务模块实际通过既有阈值；Client 无可计量实现，Start Application 被继承规则排除，不记为两者覆盖率达标。Adapter 指令比例变化包含删除本地 CorsConfig 的影响，不将其单独视为新增业务测试覆盖。
+- **依赖/制品/审查**：`./mvnw -o -B -ntp dependency:tree '-Dincludes=com.alibaba.cola:*'` 在全部 reactor 模块成功且无匹配组件（`/tmp/midgard-runtime-cola-tree.log`）。普通/exec JAR 无本地 XML/CorsConfig，exec 无 COLA JAR，保留 spring-aop/tx/jdbc；打包 YAML 与源码一致，container.xml 及其两个 include 资源可从 log starter 解析。独立审查未发现实质缺陷，综合 PASS（4.0/5）；文档链接、锚点及差异检查通过。
+- **待验收**：未启动完整应用或连接专用 MySQL，未核验真实 Bean 冲突、过滤器注册/顺序、冷启动日志/文件输出、真实客户 HTTP 和浏览器读取 X-Trace-Id；远端 CI、Asgard/Bifrost 消费亦未验证。按计划 T4 在获准的目标环境执行，可与 data-consistency 的运行验收共用环境，但分别判断结果。TD-014 保持开放，本批已分阶段本地提交，未推送。
 
 ## 风险与遗留债务
 

@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-`midgard-backend-template` 是基于 COLA 5.0 + Spring Boot 3.3 的 DDD 后端服务模板。核心价值：严格的分层边界（adapter → app → domain ← infrastructure）、标准化的对象流与命名约束、让新服务快速启动并保持长期可维护。
+`midgard-backend-template` 是遵循 COLA 分层理念、采用 Spring Boot 3.3 与 Mimir 能力的 DDD 后端服务模板。核心价值：严格的分层边界（adapter → app → domain ← infrastructure）、标准化的对象流与命名约束、让新服务快速启动并保持长期可维护。
 
 ## 全局规范
 
