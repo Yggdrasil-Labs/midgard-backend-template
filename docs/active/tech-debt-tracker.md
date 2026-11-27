@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-21
+updated: 2026-11-27
 ---
 
 # Tech Debt Tracker
@@ -69,13 +69,15 @@ updated: 2026-11-21
 
 ### TD-005：并发更新可能假成功或覆盖其他修改
 
-**证据与影响**：[CustomerAppServiceImpl](../../app/src/main/java/io/yggdrasil/labs/midgard/app/customer/application/CustomerAppServiceImpl.java) 先读取实体，再修改字段并返回成功对象；[CustomerRepositoryImpl](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/impl/CustomerRepositoryImpl.java) 将完整实体转 DO 后调用 `updateById`，忽略影响行数，[CustomerDO](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/dataobject/CustomerDO.java) 无版本字段。
+**原问题与影响**：[CustomerAppServiceImpl](../../app/src/main/java/io/yggdrasil/labs/midgard/app/customer/application/CustomerAppServiceImpl.java) 先读取实体，再修改字段并返回成功对象；[CustomerRepositoryImpl](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/impl/CustomerRepositoryImpl.java) 将完整实体转 DO 后调用 `updateById`，忽略影响行数，[CustomerDO](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/dataobject/CustomerDO.java) 无版本字段。
 
 读取后被其他事务删除时，更新 0 行仍可能返回成功；两个请求基于旧实体修改不同字段时，也可能覆盖另一请求的修改。现有单测未证明真实数据库的并发行为，后续按需人工运行验证，不新增集成测试。
 
 **下一步与关闭条件**：明确并发写入语义，检查影响行数，采用版本条件更新等策略。用真实 MySQL 和事务屏障稳定覆盖“读后被删”及两个并发更新，证明无假成功、无静默覆盖，同时保留正常更新行为。
 
-**证据边界**：本轮为源码核实，未执行数据库并发复现；不额外把可成立的幂等删除语义登记为缺陷。
+**实施进展（2026-11-27）**：[data-consistency](1.3.0/data-consistency/plan.md) 已增加版本模型、V2 迁移和影响行数检查；更新零行通过同事务 FOR UPDATE 当前读区分 20001/21002，并补仓储回归与真实 Mapper SQL 生成单元测试。整体本地门禁结果集中见[版本记录](1.3.0/release.md)，不在本条重复维护测试计数。
+
+**证据边界**：SQL 生成及隔离单元测试不证明数据库运行的并发行为；真实 MySQL 受控交错仍待验收，本条保持开放。不额外把可成立的幂等删除语义登记为缺陷。
 
 ### TD-009：前后端错误响应契约不一致
 
@@ -116,6 +118,8 @@ updated: 2026-11-21
 **原问题与进展**：根目录曾保留与 [Start 模块 V1](../../start/src/main/resources/db/migration/V1__create_customer.sql) 相同的手工副本，而实际 Flyway 配置只读取 `classpath:db/migration`，存在两处维护导致分叉的风险。2026-11-07 已按确认的方案删除根目录副本及旧说明，唯一迁移源保留在 Start 模块；维护规则统一进入[开发指南](../engineering/development.md#数据库迁移)，应用与测试的加载配置保持原样。
 
 **验证与关闭边界**：清理前两份 V1 内容哈希一致，保留脚本的内容与文件名不变。本地构建、29 项单元及架构测试、文档引用检查通过；普通 JAR 和可执行 JAR 均只包含一份 V1，其内容与保留源文件一致。尚未执行真实数据库迁移新增验收，仍需确认实际迁移及 Flyway 校验行为；验收前保持开放。
+
+**后续迁移（2026-11-27）**：[data-consistency](1.3.0/data-consistency/plan.md) 新增唯一源内的 V2，并明确 V1 结构前置比对、空库 V1+V2 与旧库升级的人工验收；V1 内容不改。新迁移脚本与打包检查不能代替真实 MySQL/Flyway 验收，本条仍保持开放。
 
 ### TD-013：架构测试未覆盖部分已声明边界
 

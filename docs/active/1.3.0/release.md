@@ -3,7 +3,7 @@
 ## 版本摘要
 
 - **版本**：1.3.0
-- **状态**：实施中（升级门禁与 error-contract-r 已实现且本地门禁通过，远端 CI 待验收；其余需求未开始）
+- **状态**：实施中（升级门禁、error-contract-r 与 data-consistency 已实现且本地门禁通过，远端 CI 待验收；data-consistency 的真实数据库/应用验收待补，其余需求未开始）
 - **目标**：围绕消除技术债提升项目质量（文档、架构、测试、构建脚本、基础能力），以 Mimir Boot 2.4.0 能力替换本地重复实现。
 - **前置条件**：Mimir Boot 2.4.0 已正式发布（2026-11-20 已核实 Release、发布流水线及 Central 主要制品可下载）。本版本所有需求以 2.4.0 正式版能力为准；本项目非容器门禁已验证，完整应用与数据库集成仍待验收。
 - **跨项目协同**：Asgard 前端同步建立 1.3.0，对接本版本的 API 契约；契约规则见 [HTTP API 响应与错误契约](../../design-docs/arch-api-contract.md)。
@@ -15,8 +15,8 @@
 | 需求 | 路径 | 简述 | 关联 TD | 依赖 | 状态 |
 | --- | --- | --- | --- | --- | --- |
 | mimir-upgrade-gates | [实施方案](mimir-upgrade-gates/plan.md) | 升级 Mimir 2.4.0；采用 parent 的 precheck/ci profile 与 PMD/CPD；项目仅维护单元/架构测试；CI 执行 `-Pci verify` | TD-006 | Mimir 2.4.0（已满足） | 已实现；集成测试范围已取消，清理后本地复验见下文，远端 CI 待验收 |
-| error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 已实现，未提交；本地完整门禁通过，运行环境及跨项目证据另计 |
-| data-consistency | `1.3.0/data-consistency/` | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 未开始 |
+| error-contract-r | [实施计划](error-contract-r/plan.md) | 按 API 契约统一为 Mimir `R`；领域错误码枚举；删除本地 Advice 与 `ErrorResponse`；结构化校验详情；补齐长度校验 | TD-009、TD-010、TD-011 | mimir-upgrade-gates（本地已实现） | 已实现，已本地提交为 56a8716；本地完整门禁通过，运行环境及跨项目证据另计 |
+| data-consistency | [需求约定](data-consistency/spec.md) · [设计](data-consistency/design.md) · [实施计划](data-consistency/plan.md) | V2 迁移（`version`、审计字段改为 Mimir 命名）；乐观锁与影响行数检查；`AuditorProvider` 示例；分页单次查询；真实 MySQL 迁移验收 | TD-005、TD-012 | error-contract-r | 已实现，已本地提交为 7ec180b；本地完整门禁与独立代码审查通过，真实数据库/应用验收待补 |
 | mimir-runtime-adoption | `1.3.0/mimir-runtime-adoption/` | 采用 Mimir 日志配置；移除全部 COLA 组件依赖与 cola 包扫描；关闭 Bean 覆盖；CORS 改用 Mimir 配置并暴露 `X-Trace-Id` | TD-014（待登记） | mimir-upgrade-gates；移除 COLA dto/exception 依赖 error-contract-r | 未开始 |
 | arch-test-adoption | `1.3.0/arch-test-adoption/` | 架构测试改用 `ColaArchRules` 与 Mimir 测试基类；最小违规夹具证明规则生效 | TD-013 | mimir-upgrade-gates | 未开始 |
 | release-hardening | `1.3.0/release-hardening/` | 构建凭据改用 BuildKit secret；Release 增加版本单调与并发协调；fork 演练验收 | TD-007、TD-008 | 无 | 未开始 |
@@ -127,7 +127,26 @@
 | Infrastructure | 99.14% | 97.92% |
 
 - 四业务模块实际通过 60% 指令/50% 分支阈值；Client 无可计量实现、Start Application 被继承规则排除，不记为它们覆盖率达标。
-- **其他边界**：真实 MySQL 唯一键错误形状、Spring 自动装配、前端/E2E 与远端 CI 未验证；TD-009/010/011 保留各自剩余验收条件。本批方案已提交为 f5e1ebc，实施改动未提交、未推送。
+- **其他边界**：真实 MySQL 唯一键错误形状、Spring 自动装配、前端/E2E 与远端 CI 未验证；TD-009/010/011 保留各自剩余验收条件。本批方案已提交为 f5e1ebc，实施改动后续已本地提交为 56a8716；该次交付未推送。
+
+### data-consistency（2026-11-27）
+
+- **实现范围**：新增 V2（审计列改名、主体与 version），V1 内容和文件名不变；Domain/CO 携带 Integer version，更新请求/Cmd 必填 version，创建为 0、成功更新递增。局部 JSON 解析拒绝小数、数字字符串、布尔值及类型溢出；输入版本/空更新在仓储访问前拒绝，旧版本优先于业务字段合并与邮箱预查。
+- **持久化边界**：插入/更新恰好影响 1 行才成功；零行更新以同事务固定 FOR UPDATE 当前读区分 20001/21002，失败不回填预增版本、不自动重试。审计复用真实 Mimir Handler 和 system AuditorProvider 示例，创建信息禁止更新。分页改为 findPage、PageConverters 与 PageResult.map，不再额外 count；一次分页调用仍可有 count/records 两条 SQL。
+- **实现与环境**：原代码基线 56a8716，本地开发期间其他任务仅新增 aa31df9 的文档交叉引用提交，方案已本地提交为 9120bca，实现已本地提交为 7ec180b。WSL、Temurin 17.0.19、项目 Maven Wrapper；正式 Mimir 2.4.0，实际测试依赖 MyBatis-Plus 3.5.18.1。POM/依赖版本、发布配置、其他项目未改。
+- **聚焦 Red/Green**：领域 Serializable、审计列元数据、仓储零行假成功、直调缺版本以及 JSON 小数/数字字符串接受路径均取得预期断言失败及后续 Green。Mockito 沙箱 self-attach 限制按准确离线命令的沙箱外自动授权处理，未改 MockMaker 或增加 javaagent。日志在 `/tmp/data-consistency-t1-*.log`、`/tmp/data-consistency-t2-*.log`、`/tmp/data-consistency-t3-*.log`，不将初始化错误当作行为 Red。
+- **完整本地门禁**：`./mvnw -o -B -ntp -Pprecheck verify` 与 `./mvnw -o -B -ntp -Pci clean verify` 均成功，无 skipTests/skipITs/jacoco.skip 参数。最后一次从干净构建目录执行，实际发现 **14 套、274 项测试，0 失败、0 错误、0 跳过**；Spotless、Enforcer、覆盖率及 **24 份生产/测试 PMD/CPD XML** 均通过，报告零违规、重复及处理错误。日志分别为 `/tmp/data-consistency-precheck-final.log`、`/tmp/data-consistency-ci-final.log`。App 输入校验提取为私有方法以满足原 PMD 复杂度门槛，未降低阈值。
+
+| 模块 | 本次指令覆盖率 | 本次分支覆盖率 |
+| --- | --- | --- |
+| Domain | 100.00% | 100.00% |
+| App | 98.51% | 91.18% |
+| Adapter | 64.58% | 85.71% |
+| Infrastructure | 99.28% | 98.39% |
+
+- 四业务模块实际通过 60% 指令/50% 分支阈值；Client 无可计量实现、Start Application 被继承规则排除，不把二者记为覆盖率达标。全部测试仍为单元、standalone/受管序列化与 ArchUnit，没有新增 Spring 上下文或外部 I/O 集成测试。
+- **独立审查与文件验证**：持久化/迁移和 App/Adapter 分别完成独立代码审查，未发现实质缺陷，综合 PASS（4.0/5）。真实 Mapper SQL/乐观锁插件的纯单元测试验证版本条件、预增、创建审计字段保护、锁查询 SQL 与无二级缓存；这些不证明真实数据库锁/事务行为。普通及可执行 JAR 各含一份字节一致的 V1/V2，本次文档链接/锚点与差异检查通过。
+- **剩余验收**：未执行真实 MySQL 空库初始化、V1→V2/Flyway validate、RR 受控交错、实际 Spring 装配或 HTTP 数据库链路；远端 CI、Asgard/Bifrost 消费亦未验证。按计划 T5 在明确授权的专用环境执行；迁移前实际结构须与 V1 预期 DDL 比对，含 idx_email 缺失的拒绝预演。TD-005/TD-012 保持开放，不以源码、打包或隔离测试关闭。本批已分阶段本地提交，未推送。
 
 ## 风险与遗留债务
 
