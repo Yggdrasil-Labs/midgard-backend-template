@@ -21,7 +21,7 @@
 | 跨服务契约 | Client；当前仅有包结构预留，新增接口或 DTO 时同步使用方与兼容说明 |
 | 装配与运行配置 | Start；不把业务规则放入启动模块 |
 | 数据库结构 | 迁移唯一维护在 Start 模块的 `src/main/resources/db/migration`，按[数据库迁移规则](#数据库迁移)新增版本 |
-| 回归测试 | 所属模块 `src/test/`；完整应用链路样例在 Start，跨项目 E2E 由对应项目维护 |
+| 回归测试 | 所属模块 `src/test/`；仅编写单元测试、MockMvc standalone 与 ArchUnit 测试 |
 
 本表用于定位，不重新定义[架构约束](../../ARCHITECTURE.md)。不要把建议结构写成已有实现。
 
@@ -40,30 +40,52 @@
 - 新增迁移使用 `V{版本号}__{描述}.sql`，版本不得重复。已经执行的迁移不修改内容、重命名或重新编号；后续结构与数据变更使用新版本脚本。
 - 数据库变更通过版本化脚本维护。开发或测试专用初始化数据由相应环境管理，避免随正式迁移加载。
 - 验证需区分资源打包与真实数据库迁移；检查包内脚本不能代替空库初始化、已有库迁移及 Flyway 校验。
+- 1.3.0 客户 V2 会重命名审计时间列并新增版本，必须停止旧实例及写流量后升级。迁移前按[数据一致性设计](../active/1.3.0/data-consistency/design.md#数据模型与迁移b1b3)比较实际结构与 V1 预期 DDL，结构漂移立即停止；Flyway validate 不能代替结构比对。迁移/恢复和运行验收按[人工步骤](../active/1.3.0/data-consistency/plan.md#t5专用环境人工迁移并发与消费验收)执行，未验收时不记为数据库可用。
+
+## 运行时配置
+
+- 日志由 `logging.config=classpath:com/yggdrasil/labs/log/logback/container.xml` 显式选定，默认文本、标准输出，不配置文件日志。消息及异常链使用四组凭据脱敏；路径/IP/User-Agent 等不能视为已全面脱敏，勿新增真实凭据或请求体日志。
+- 未显式选择 profile 时默认激活 local。local/dev 应用日志 DEBUG，test 为 INFO，prod 为 WARN；`access.log` 保持 INFO。开启 dev/prod 混合 profile 时，开发 CORS 关闭，日志级别仍依实际配置优先级解析。
+- 开发跨域只在 `(local | dev) & !test & !prod` 时启用，默认允许 `http://localhost:5173`，作用于框架固定 `/**`。`127.0.0.1`、其他协议或端口需加入 `mimir.boot.web.cors.allowed-origins` 的完整覆盖列表，示例见 `application-local.yml.example`；不再接受 localhost 任意端口。不要覆盖用户已有 local 文件，先核对其显式设置。
+- 对允许的开发 Origin，保留凭据、Content-Disposition 暴露并新增 X-Trace-Id。生产/测试默认不提供开发 CORS 响应头；启用但空白名单或 `*`+凭据为配置错误，不提供宽松 fallback。
+- 客户响应头/体及请求处理期日志沿用 Mimir Trace 组件；终态访问日志可能在 MVC 恢复 MDC 后写入，不承诺它含相同 traceId。自动配置、过滤器顺序、真实启动及浏览器读取仍须专用环境验收，详见[设计](../active/1.3.0/mimir-runtime-adoption/design.md)和[人工步骤](../active/1.3.0/mimir-runtime-adoption/plan.md#t4运行验收与说明同步)。
 
 ## 按改动验证
+
+### 测试范围
+
+- 项目测试仅包含单元测试、MockMvc standalone 测试与 ArchUnit 架构测试。
+- 不新增启动 Spring 上下文、连接真实数据库或访问外部 I/O 的集成测试；不要把此类测试改名后并入 Surefire。
+- standalone 与 mock 测试验证其隔离边界内的行为，不能据此声称真实数据库、完整 Spring 装配或外部系统行为已验证。需要这些证据时，作为独立的运行环境验证说明对象与环境，不在项目中新增集成测试。
+- 默认 `test`、`verify`、`precheck` 与 `ci` 生命周期无需 Docker，也不需要 `-DskipITs`。
 
 | 改动 | 所需证据 |
 | --- | --- |
 | 纯文档 | 本次文件的格式、链接、导航和事实核对；`git diff --check` |
-| 局部逻辑 | 相关单测及受影响模块检查；明确尚未覆盖的集成行为 |
-| 接口、持久化或配置 | 对应契约与集成场景；需真实数据库或完整上下文的结论不能由 mock 替代 |
+| 局部逻辑 | 相关单元测试、MockMvc standalone 或架构测试及受影响模块检查；明确外部环境行为未由这些测试验证 |
+| 接口、持久化或配置 | 对应契约与隔离测试；需真实数据库或完整上下文的结论不能由 mock 替代，作为独立运行环境验证记录 |
 | 跨模块或依赖变化 | 受影响模块构建、兼容性及适用回归验证 |
 
-以下 Maven 命令用于已授权的实施与验证；默认 profile 包含自动格式化，不作为只读调查命令使用：
+以下 Maven 命令用于已授权的实施与验证。测试生命周期运行单元测试、MockMvc standalone 测试和 ArchUnit 测试，不启动集成测试或依赖 Docker。
 
 ```bash
-# 模块单测示例；同时构建所需 Reactor 依赖
-./mvnw -pl app -am test
+# 单元测试、MockMvc standalone 测试与 ArchUnit 测试
+./mvnw -B -ntp test
 
-# 项目构建及测试生命周期；以实际报告判断覆盖范围
-./mvnw clean verify
+# 默认生命周期：测试与打包验证，不启用全量质量检查
+./mvnw -B -ntp verify
 
-# 显式修改格式，随后复核差异
-./mvnw spotless:apply
+# 本地全量质量预检：测试、覆盖率、格式及 PMD/CPD
+./mvnw -B -ntp -Pprecheck clean verify
+
+# CI 同一门禁，另启用 Enforcer；不要求 Docker 或 GPG 私钥
+./mvnw -B -ntp -Pci clean verify
+
+# 仅在需要时显式修改格式，随后复核差异
+./mvnw -B -ntp spotless:apply
 ```
 
-本项目默认 dev 配置会执行格式化，并跳过 Spotless check 与 JaCoCo；命令成功不等于全部格式、覆盖率和集成验收通过。检查时读取实际启用配置及本轮报告，不把其他仓库的命令行为套用到这里。数据库集成测试需要对应运行环境，跳过时明确说明。
+正常生命周期中的 Spotless 只检查格式，不会自动修改源码；`spotless:apply` 仅由开发者显式执行。全量质量检查由 `precheck` 和 `ci` profile 启用，`ci` 额外运行 Enforcer；GPG 签名默认跳过。命令是否通过及实际覆盖范围，以本轮报告为准。测试通过不构成真实数据库迁移、完整 Spring 上下文或外部系统行为的验证证据。
 
 ## 交付
 

@@ -22,8 +22,8 @@
  * <p><b>类的职责：</b>
  *
  * <ul>
- *   <li>继承 com.alibaba.cola.dto.DTO 基类
- *   <li>使用 @Data 和 @EqualsAndHashCode(callSuper = true) 注解
+ *   <li>使用普通契约对象，实现 java.io.Serializable 并声明 serialVersionUID
+ *   <li>按需使用 @Data 等注解，不要求继承框架 DTO 基类
  *   <li>定义返回给调用方的业务字段
  *   <li>只包含需要展示给外部的字段，不包含内部实现细节
  * </ul>

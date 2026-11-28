@@ -1,5 +1,5 @@
 ---
-updated: 2026-11-07
+updated: 2026-11-28
 ---
 
 # Tech Debt Tracker
@@ -15,7 +15,7 @@ updated: 2026-11-07
 
 ## 状态总览
 
-当前 **10 项开放（6 项 P1、4 项 P2）、1 项待验证、2 项关闭**。没有证据充分的 P0 事项。
+当前 **11 项开放（6 项 P1、5 项 P2）、1 项待验证、2 项关闭**。没有证据充分的 P0 事项。
 
 - **P1**：存在明确功能缺口、数据一致性或构建发布风险，优先处理。
 - **P2**：主要增加维护成本或削弱防回归保障，可排在 P1 之后。
@@ -23,38 +23,34 @@ updated: 2026-11-07
 
 | ID | 优先级 | 状态 | 主题 | 处理边界 |
 | --- | --- | --- | --- | --- |
-| TD-006 | P1 | 开放 | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
+| TD-006 | P1 | 开放（本地验证通过，待 CI 验收） | 质量门禁入口与签名职责混杂 | 后端构建 / Mimir Parent |
 | TD-007 | P1 | 开放 | 构建凭据写入 builder 层及缓存风险 | Dockerfile / build.sh / Release |
 | TD-008 | P1 | 开放 | 旧版本重发可能倒退 main 版本及 latest 镜像 | Release |
 | TD-005 | P1 | 开放 | 并发更新可能假成功或覆盖其他修改 | App / Repository / 数据库 |
-| TD-009 | P1 | 开放 | 前后端错误响应契约不一致 | Midgard / Asgard 协同 |
+| TD-009 | P1 | 开放（后端已实现，待跨项目验收） | 前后端错误响应契约不一致 | Midgard / Asgard 协同 |
 | TD-010 | P1 | 开放 | 输入长度与数据库约束不一致 | 请求 / 应用与领域入口 / 持久化 |
 | TD-001 | P2 | 开放 | 文档事实漂移且缺少一致性检查 | 文档 / CI |
 | TD-002 | P2 | 开放 | 数据库结构参考文档缺失 | 数据源 / 生成流程 |
 | TD-012 | P2 | 开放（副本已清理，待验收） | 数据库迁移脚本有两份手工副本 | 数据库迁移 / 构建 |
 | TD-013 | P2 | 开放 | 架构测试未覆盖部分已声明边界 | ArchitectureTest |
+| TD-014 | P2 | 开放（本地已实现，待运行验收） | 运行时配置与组件未收敛到 Mimir | 日志 / CORS / COLA 组件 / Bean 装配 |
 | TD-011 | 待定 | 待验证 | 两个全局异常 Advice 的职责与顺序未核验 | Adapter / Mimir Exception Starter |
 
 ## 优先处理项
 
 ### TD-006：质量门禁入口与签名职责混杂
 
-**证据与现状**：
+**原问题（Mimir Parent 2.3.0）**：根 POM 的 `ci` 显式跳过测试，且该模式有效模型仍要求 GPG 签名；默认/precheck 生命周期又自动执行 Spotless apply。原 CI 的独立 Test job 实际执行默认 `verify`，并非整个 CI 不运行测试，但未统一采用严格质量入口，Dependabot 的构建路径仅做编译。
 
-- [根 POM](../../pom.xml) 的 `ci` profile 仍设置 `skipTests=true`、`maven.test.skip=true`；当前 Mimir Parent **2.3.0** 在该 profile 的 `verify` 阶段仍绑定 `gpg:sign`，有效配置为 `skip=false`。
-- [CI](../../.github/workflows/ci.yml) 分为构建和测试两个 job，Test 确实执行默认 `verify`，不能表述为“整个 CI 不运行测试”。普通 PR 另有 `validate -Pci` 格式检查；Dependabot 分支跳过该步骤。
-- 默认 dev 有效模型跳过 JaCoCo 和 Spotless check；根 POM 又在 `process-sources` 执行 Spotless apply，所以默认校验会自动格式化源码，而不是以格式错误阻断构建。
-- **已有 precheck 候选入口**：有效模型开启测试与 JaCoCo，执行插件列表中无 GPG，但仍包含自动格式化；CI 未采用，尚未验证失败用例能否被门禁拒绝。无需为此预设新建一套 profile。
+**实施进展（2026-11-20）**：按 [1.3.0 升级门禁方案](1.3.0/mimir-upgrade-gates/plan.md)升级 Parent/BOM 至 2.4.0，移除测试跳过、自动 apply 及重复插件配置。CI 对所有 PR 使用同一 `-Pci clean verify`；PMD/CPD 显式启用违规阻断与分析错误阻断，签名默认跳过。补齐必要模块测试及存量规则违规，未降低阈值。
 
-| 入口 | 测试配置 | 覆盖率配置 | 格式行为 | 签名执行 |
-| --- | --- | --- | --- | --- |
-| 默认 dev | 开启 | 跳过 | 自动 apply，check 跳过 | 无 |
-| ci | 本项目显式跳过 | 开启 | validate 有 check，后续仍有 apply | verify 强制 sign |
-| precheck | 开启 | 开启 | 仍有 apply；check 实际效果待验 | 无 |
+**升级初次本地证据**：7 模块的 dev/precheck/ci 有效模型核对通过；`-Pci verify -DskipITs` 在原工作区及无旧构建产物的临时普通副本通过，57 项单元/架构测试零失败、错误、跳过。四业务模块实际通过覆盖率阈值，生产/测试静态报告零违规；当时的 9 组独立故障夹具均由预期检查拒绝。结果集中在 [版本记录](1.3.0/release.md#最终验证摘要)。
 
-**下一步与关闭条件**：优先评估并收敛现有 precheck，使 CI 采用无签名、只检查源码的质量入口；在具备 Docker 的干净环境中验证单测、集成测试、覆盖率和格式门禁均实际执行，工作区不变。故意引入失败测试、覆盖率不足和格式错误时均应返回非零。
+**范围调整与关闭条件**：用户最新要求不再维护项目集成测试，原容器及失败 IT 夹具要求已取消。移除相关源码/依赖并取消 Failsafe 生命周期绑定后，复验无需 `-DskipITs` 的单元/架构及质量门禁，再于获准推送后核验远端 CI；本条保持开放。真实数据库与完整应用行为不属于单元测试证明范围，删除集成测试不自动关闭迁移或运行时相关债务。
 
-**证据边界**：本轮执行 `help:effective-pom` 核对 ci/precheck，未重新执行签名；旧记录中 2.2.1 环境的 `No pinentry` 及 `-Dgpg.skip=true` 无效属于历史证据。`66a6bf3` 已处理空 client 模块 Javadoc 打包失败，该修复不能关闭本条质量门禁债务。
+**清理后本地复验**：`-Pci verify` 未传 `-DskipITs` 通过，57 项单元/架构测试全部执行；默认 verify 与依赖树检查通过，实际依赖无 Testcontainers，Failsafe 无生命周期执行。当前仅剩远端 CI 待验收，不再把已取消的集成测试列作关闭前置。
+
+**历史证据边界**：2.2.1 环境的 `No pinentry` 及 `-Dgpg.skip=true` 无效属于历史结果；`66a6bf3` 处理空 client 模块 Javadoc 打包失败，不单独构成本条关闭依据。
 
 ### TD-007：构建凭据写入 builder 层及缓存风险
 
@@ -74,29 +70,33 @@ updated: 2026-11-07
 
 ### TD-005：并发更新可能假成功或覆盖其他修改
 
-**证据与影响**：[CustomerAppServiceImpl](../../app/src/main/java/io/yggdrasil/labs/midgard/app/customer/application/CustomerAppServiceImpl.java) 先读取实体，再修改字段并返回成功对象；[CustomerRepositoryImpl](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/impl/CustomerRepositoryImpl.java) 将完整实体转 DO 后调用 `updateById`，忽略影响行数，[CustomerDO](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/dataobject/CustomerDO.java) 无版本字段。
+**原问题与影响**：[CustomerAppServiceImpl](../../app/src/main/java/io/yggdrasil/labs/midgard/app/customer/application/CustomerAppServiceImpl.java) 先读取实体，再修改字段并返回成功对象；[CustomerRepositoryImpl](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/impl/CustomerRepositoryImpl.java) 将完整实体转 DO 后调用 `updateById`，忽略影响行数，[CustomerDO](../../infrastructure/src/main/java/io/yggdrasil/labs/midgard/infrastructure/persistence/dataobject/CustomerDO.java) 无版本字段。
 
-读取后被其他事务删除时，更新 0 行仍可能返回成功；两个请求基于旧实体修改不同字段时，也可能覆盖另一请求的修改。已有单测和集成测试未覆盖这些并发场景。
+读取后被其他事务删除时，更新 0 行仍可能返回成功；两个请求基于旧实体修改不同字段时，也可能覆盖另一请求的修改。现有单测未证明真实数据库的并发行为，后续按需人工运行验证，不新增集成测试。
 
 **下一步与关闭条件**：明确并发写入语义，检查影响行数，采用版本条件更新等策略。用真实 MySQL 和事务屏障稳定覆盖“读后被删”及两个并发更新，证明无假成功、无静默覆盖，同时保留正常更新行为。
 
-**证据边界**：本轮为源码核实，未执行数据库并发复现；不额外把可成立的幂等删除语义登记为缺陷。
+**实施进展（2026-11-27）**：[data-consistency](1.3.0/data-consistency/plan.md) 已增加版本模型、V2 迁移和影响行数检查；更新零行通过同事务 FOR UPDATE 当前读区分 20001/21002，并补仓储回归与真实 Mapper SQL 生成单元测试。整体本地门禁结果集中见[版本记录](1.3.0/release.md)，不在本条重复维护测试计数。
+
+**证据边界**：SQL 生成及隔离单元测试不证明数据库运行的并发行为；真实 MySQL 受控交错仍待验收，本条保持开放。不额外把可成立的幂等删除语义登记为缺陷。
 
 ### TD-009：前后端错误响应契约不一致
 
-**证据与影响**：[ErrorResponse](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/dto/ErrorResponse.java) 和本地 [GlobalExceptionHandler](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/GlobalExceptionHandler.java) 使用 `code/message`；[Asgard 拦截器](../../../asgard-frontend-template/src/utils/api/request.ts) 的非 2xx 分支读取 `errCode/errMessage`。后端格式的 400/409 响应进入该分支时，业务码及具体字段说明会丢失。
+**原问题与影响**：历史本地 ErrorResponse/GlobalExceptionHandler 使用 code/message，而 [Asgard 拦截器](../../../asgard-frontend-template/src/utils/api/request.ts) 的非 2xx 分支读取 errCode/errMessage，业务码及字段说明可能丢失。
 
-[CustomerApiIT](../../start/src/test/java/io/yggdrasil/labs/midgard/start/customer/CustomerApiIT.java) 断言 `$.code`，不能证明前端能正确消费。与 [Asgard 技术债清单](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md) 第 10 项对应同一跨项目问题。
+**后端进展（2026-11-21）**：[error-contract-r](1.3.0/error-contract-r/plan.md) 已将五接口统一为 Mimir R，移除本地 Advice/ErrorResponse，业务异常为 HTTP 200 + 业务码、MVC 校验为 HTTP 400；70 个 standalone/序列化/追踪场景及包含 Mockito 套件的完整本地门禁已通过（209 项测试）。前端未改、真实消费链路未验证，不能关闭本条。
 
-**下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖 400、404、409、500，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
+历史 `CustomerApiIT` 曾断言 `$.code`，不能证明前端能正确消费；该测试已按用户要求移除。与 [Asgard 错误契约债](../../../asgard-frontend-template/docs/active/tech-debt-tracker.md#api-contract-r) 对应同一跨项目问题。
 
-**证据边界**：旧记录报告过前端受控执行复现；本轮仅重新核对两端源码，没有重跑该探针或真实 HTTP 请求。
+**下一步与关闭条件**：两端统一错误信封或集中适配；用后端真实序列化结果驱动前端消费测试，覆盖成功、HTTP 200 + 20001/21001、400 校验、404 协议及 500 系统错误，保留业务码和安全说明，并完成至少一次真实 HTTP 链路验证。与 TD-011 一起核对实际启用的异常处理器，避免只验证其中一种响应来源。
+
+**证据边界**：本轮是后端隔离 HTTP/序列化测试，不是实际部署 HTTP 或 Asgard 消费验证；旧前端受控复现只作历史证据。
 
 ### TD-010：输入长度与数据库约束不一致
 
-**证据与影响**：[创建请求](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/customer/dto/CreateCustomerRequest.java)、[更新请求](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/customer/dto/UpdateCustomerRequest.java) 和 [Customer.validate()](../../domain/src/main/java/io/yggdrasil/labs/midgard/domain/customer/model/Customer.java) 均未限制邮箱、电话长度；[迁移 DDL](../../start/src/main/resources/db/migration/V1__create_customer.sql) 的上限分别为 100 和 20。
+**原问题**：创建/更新请求与 Domain 曾未限制邮箱、电话长度，而[迁移 DDL](../../start/src/main/resources/db/migration/V1__create_customer.sql) 上限分别为 100 和 20。该输入错误路径缺口曾由 P2 调整为 P1。
 
-例如 21 字符电话能够通过当前边界校验，进入持久化；数据库拒绝时可能落入通用数据冲突处理，而非明确字段错误。数据库实际 SQL mode 及响应尚未运行验证。本轮将原 P2 调整为 **P1**，依据是已存在输入错误路径的功能缺口，而非单纯维护成本。
+**当前进展（2026-11-21）**：请求 DTO/Cmd/Domain 已补齐 50/100/20 约束；HTTP 非法字段和空更新在进入 App 前拒绝，直接调用仍有领域防线。Domain、请求校验及 App/Infrastructure Mockito 回归均已通过完整本地门禁；真实应用/数据库运行证据未补充，保持开放，不将隔离测试等同实际环境验收。
 
 **下一步与关闭条件**：补齐创建/更新的长度校验，明确 App 直调及领域入口的保护范围。覆盖 email 100/101、phone 20/21 及电话缺省；超长输入返回 400 和明确字段说明，拒绝后数据库不变。
 
@@ -120,27 +120,39 @@ updated: 2026-11-07
 
 **验证与关闭边界**：清理前两份 V1 内容哈希一致，保留脚本的内容与文件名不变。本地构建、29 项单元及架构测试、文档引用检查通过；普通 JAR 和可执行 JAR 均只包含一份 V1，其内容与保留源文件一致。尚未执行真实数据库迁移新增验收，仍需确认实际迁移及 Flyway 校验行为；验收前保持开放。
 
+**后续迁移（2026-11-27）**：[data-consistency](1.3.0/data-consistency/plan.md) 新增唯一源内的 V2，并明确 V1 结构前置比对、空库 V1+V2 与旧库升级的人工验收；V1 内容不改。新迁移脚本与打包检查不能代替真实 MySQL/Flyway 验收，本条仍保持开放。
+
 ### TD-013：架构测试未覆盖部分已声明边界
 
 **证据与影响**：[ARCHITECTURE](../../ARCHITECTURE.md) 明确禁止 Domain 依赖 client 或数据库映射；[ArchitectureTest](../../start/src/test/java/io/yggdrasil/labs/midgard/start/ArchitectureTest.java) 仅定义 Start、Adapter、App、Domain、Infrastructure 五层，未将 Client 作为被约束目标，也没有校验 Domain 的持久化注解或框架依赖。因此现有层间测试不能完整执行这些约束。
 
 **下一步与关闭条件**：为已声明但未覆盖的边界增加针对性规则；用最小违规夹具分别证明 Domain→Client 和持久化映射注解能被拒绝，同时当前合法代码仍通过。此项描述的是防回归缺口，不代表当前 Domain 已存在违规。
 
+### TD-014：运行时配置与组件未收敛到 Mimir
+
+**原问题（2026-11-27，基线 5246d96）**：Start 已依赖 Mimir Log/Web 2.4.0，但原 `start/src/main/resources/logback-spring.xml` 使用本地 `%msg` 控制台格式，原 Adapter `web/CorsConfig.java` 在所有 profile 声明 localhost 任意端口；四项 COLA 组件及根 BOM、Application 包扫描仍保留，application.yml 允许 Bean 覆盖。该基线的业务源码已无 COLA 类型使用，Client 三处 package-info 仍指导继承其 DTO 基类。
+
+**影响与方案**：重复配置掩盖框架能力与装配边界，未显式区分开发跨域环境；这不证明实际泄露或 Bean 冲突已发生。已建立 [1.3.0 mimir-runtime-adoption](1.3.0/mimir-runtime-adoption/plan.md) 方案，采用显式 container/text 日志、明确来源的开发 CORS、组件清理及覆盖关闭；实际实施与验证进度集中见[版本记录](1.3.0/release.md)，不以方案就绪代替运行证据。
+
+**本地进展（2026-11-28）**：组件与包扫描已清理，本地 XML/CORS 已移除；显式 container/text、精确来源 CORS、Bean 覆盖关闭已配置。隔离回归、完整门禁、依赖树/JAR 和独立代码审查已通过，计数与命令集中见版本记录；实际启动/日志/CORS/追踪/浏览器运行证据仍待补，本条保持开放。
+
+**关闭条件**：实际依赖树/JAR 无 COLA 组件，重复本地 XML/CORS 已清理；本地隔离回归与质量门禁通过，并取得专用环境的启动无覆盖、日志输出/脱敏、访问记录、profile CORS 与客户响应追踪证据。终态 access traceId 受框架时序限制，不将其完整关联列为本项保证；具体范围见设计。远端 CI 与前端消费状态单列，未取得运行证据时保留开放。
+
 ## 待验证项
 
 ### TD-011：两个全局异常 Advice 的职责与顺序未核验
 
-**已核实事实**：本地 [GlobalExceptionHandler](../../adapter/src/main/java/io/yggdrasil/labs/midgard/adapter/web/GlobalExceptionHandler.java) 无显式 order，且 `Exception` 兜底返回 500，未专门处理请求体解析错误。发布构件 `mimir-boot-starter-exception:2.3.0` 的源码中，`ExceptionAutoConfiguration` 缺省启用，只有存在 **MimirExceptionHandler 类型** Bean 才退让；其 `MimirExceptionHandler` 同为最低优先级，并显式将 `HttpMessageNotReadableException` 映射为 400。本地不同类型的 Advice 不会让该条件自动退让。
+**原问题**：本地 GlobalExceptionHandler 与历史 Mimir 2.3.0 Handler 均为最低优先级；本地不同类型的 Advice 不会让 Mimir 的条件自动退让，实际匹配顺序未验证，本地兜底又可能掩盖请求体错误的 400。
 
-**未知与影响**：当前完整应用实际注册顺序尚未验证。若本地 Advice 先匹配，空请求体或损坏 JSON 可能被兜底为 500；若 Mimir Advice 先匹配，则可返回 400。不能将“坏 JSON 必然返回 500”登记为已确认缺陷；同样需核对实际错误信封是否符合 TD-009 的统一契约。
+**当前进展（2026-11-21）**：本地 Advice 与 ErrorResponse 已删除，源码和打包结果不再包含它们；standalone 显式装配正式 2.4.0 Mimir Handler，已验证坏 JSON、字段错误与未知异常的映射。这不证明完整应用中自动配置已注册，实际运行选择仍未验收，保持待验证。
 
-**下一步与判定标准**：在完整 Spring 上下文中记录 Advice 顺序与实际异常处理方法，验证空 body、损坏 JSON、字段类型错误、405/415 和未知服务端异常。按结果明确两个 Advice 的职责与选择顺序，或关闭此项；确认客户端错误被误报为 500 后再定为 P1。单独装配本地 Advice 的 MockMvc 测试不能代替实际自动配置下的验证。
+**下一步与判定标准**：按需人工启动应用记录实际 Handler 与响应，核验自动配置及协议错误；不新增集成测试。只有取得实际运行证据后关闭自动装配疑点，不能把显式 standalone 装配或移除本地源码当作运行时注册结果。
 
 ## 已关闭项
 
 | ID | 关闭日期 | 主题 | 关闭依据与边界 |
 | --- | --- | --- | --- |
-| TD-003 | 2026-10-23 | 模板业务示例不足 | Customer 已具备 Domain/App/Infrastructure/Adapter 完整链路，[CustomerApiIT](../../start/src/test/java/io/yggdrasil/labs/midgard/start/customer/CustomerApiIT.java) 有 CRUD 生命周期样例，Bifrost 也有 Customer CRUD E2E 源码。仅关闭“缺少样例”，不代表容器集成或 E2E 本轮运行通过。 |
+| TD-003 | 2026-10-23 | 模板业务示例不足 | 当时 Customer 已具备 Domain/App/Infrastructure/Adapter 完整链路，历史 CustomerApiIT 提供 CRUD 样例；该集成测试现已按用户要求移除，Bifrost 示例不在本次清理范围。保留原关闭事实，不代表运行验收通过。 |
 | TD-004 | 2026-06-07 | 前端相关文档仍为占位 | 沿用原关闭日期；本轮确认 FRONTEND.md 已不存在。 |
 
 ## 建议处理顺序

@@ -2,7 +2,7 @@ spring:
   application:
     name: midgard-backend-template
   main:
-    allow-bean-definition-overriding: true
+    allow-bean-definition-overriding: false
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -11,6 +11,38 @@ spring:
 
 server:
   port: 8081
+
+logging:
+  config: classpath:com/yggdrasil/labs/log/logback/container.xml
+  level:
+    root: INFO
+    io.yggdrasil.labs.midgard: INFO
+    access.log: INFO
+
+mimir:
+  boot:
+    log:
+      format: text
+      mask:
+        enabled-patterns: [password, token, secret, api_key]
+        replacement: '****'
+      access:
+        enabled: true
+        slow-threshold-ms: 3000
+    exception:
+      validation:
+        structured-details-enabled: true
+    web:
+      cors:
+        enabled: false
+        allowed-origins: ['http://localhost:5173']
+        allowed-methods: [GET, POST, PUT, DELETE, OPTIONS]
+        allowed-headers: ['*']
+        exposed-headers: [Content-Disposition, X-Trace-Id]
+        allow-credentials: true
+        max-age: 3600s
+      serialization:
+        write-nulls: true
 
 springdoc:
   api-docs:
@@ -28,3 +60,19 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+---
+spring:
+  config:
+    activate:
+      on-profile: '(local | dev) & !test & !prod'
+
+mimir:
+  boot:
+    web:
+      cors:
+        enabled: true
+
+logging:
+  level:
+    io.yggdrasil.labs.midgard: DEBUG

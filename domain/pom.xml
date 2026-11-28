@@ -13,17 +13,11 @@
     <name>domain</name>
 
     <dependencies>
-        <!-- Domain 层只依赖自身与 COLA 组件，不依赖 client/app/infra -->
-        <!-- COLA components -->
+        <!-- Domain 层依赖纯公共类型，不依赖 client/app/infra 或框架 -->
         <dependency>
-            <groupId>com.alibaba.cola</groupId>
-            <artifactId>cola-component-domain-starter</artifactId>
+            <groupId>io.github.yggdrasil-labs</groupId>
+            <artifactId>mimir-boot-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.cola</groupId>
-            <artifactId>cola-component-exception</artifactId>
-        </dependency>
-        <!-- COLA components End-->
         
         <!-- 工具类 -->
         <dependency>

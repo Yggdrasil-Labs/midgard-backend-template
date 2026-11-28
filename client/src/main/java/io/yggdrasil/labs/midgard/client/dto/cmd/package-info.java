@@ -34,8 +34,8 @@
  * <p><b>类的职责：</b>
  *
  * <ul>
- *   <li>继承 com.alibaba.cola.dto.Command 基类
- *   <li>使用 @Data 和 @EqualsAndHashCode(callSuper = false) 注解
+ *   <li>使用普通契约对象，实现 java.io.Serializable 并声明 serialVersionUID
+ *   <li>按需使用 @Data 等注解，不要求继承框架 DTO 基类
  *   <li>定义写操作所需的业务字段
  *   <li>使用 JSR 303 注解进行参数校验（@NotNull、@NotEmpty 等）
  * </ul>

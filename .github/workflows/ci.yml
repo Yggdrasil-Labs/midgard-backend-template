@@ -12,6 +12,7 @@ env:
 
 jobs:
   build:
+    name: Quality checks
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,59 +46,5 @@ jobs:
       - name: Make Maven Wrapper executable
         run: chmod +x mvnw
 
-      - name: Format check
-        # Dependabot PR 跳过格式检查
-        if: github.actor != 'dependabot[bot]'
-        # ci profile 在 validate 阶段自动执行 spotless:check
-        # 格式检查应在编译之前执行
-        run: ./mvnw -B validate -Pci
-
-      - name: Build and Package
-        # Dependabot PR 跳过格式检查
-        if: github.actor != 'dependabot[bot]'
-        # 使用 ci profile 进行构建，跳过所有测试
-        run: ./mvnw -B -U clean package -Pci -DskipTests
-
-      - name: Build only (Dependabot)
-        # Dependabot PR 只进行编译检查，不运行格式检查
-        if: github.actor == 'dependabot[bot]'
-        run: ./mvnw -B -U clean compile -DskipTests
-
-  test:
-    name: Test
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v6.1.0
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Configure Maven for GitHub Packages
-        run: |
-          mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << 'EOF'
-          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${{ github.actor }}</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-
-      - name: Make Maven Wrapper executable
-        run: chmod +x mvnw
-
-      - name: Run tests
-        run: ./mvnw -B verify
+      - name: Run quality gates
+        run: ./mvnw -B -ntp -Pci clean verify

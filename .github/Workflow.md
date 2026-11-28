@@ -8,7 +8,7 @@
 
 | 工作流文件 | 触发条件 | 职责 |
 |:---|:---|:---|
-| `ci.yml` | Push 到 `main`/`develop`，PR 到 `main` | **持续集成**：代码格式检查 (Spotless)、编译打包。Dependabot PR 仅做编译。 |
+| `ci.yml` | Push 到 `main`/`develop`，PR 到 `main` | **持续集成**：通过 `./mvnw -B -ntp -Pci clean verify` 执行单元测试、架构测试、覆盖率、Spotless、PMD/CPD 与 Enforcer；不运行集成测试且无需 Docker；所有 PR（包括 Dependabot）使用同一门禁。 |
 | `release-please.yml` | Push 到 `main`、PR 事件（更新 Release PR）、手动触发 | **发布提案**：分析 Commit 信息，自动更新 `CHANGELOG.md`、`.release-please-manifest.json` 和 `pom.xml`（release 版本），生成 Pull Request。 |
 | `create-tag.yml` | Release Please 工作流完成后（检测到 Release PR 已合并）、或手动触发 | **版本打标**：从 manifest/CHANGELOG/pom 提取版本号，使用 `RELEASE_TOKEN` (PAT) 创建并推送 Git Tag（如 `v1.0.0`）。 |
 | `release.yml` | Tag 推送 `v*`、或手动触发（可填版本号、可选跳过 Docker） | **正式发布**：构建校验 → 更新 POM/Flatten → 打包 Jar → **发布 Docker 镜像 (GHCR)** → 创建 GitHub Release → **自动升级下个快照版本**。 |

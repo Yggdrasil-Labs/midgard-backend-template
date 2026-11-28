@@ -1,11 +1,11 @@
 # midgard-backend-template
 
-> 基于 COLA 5.0 的 DDD 后端服务模板，用于快速启动符合分层边界的 Spring Boot 微服务。
+> 遵循 COLA 分层理念的 DDD 后端服务模板，用于快速启动符合分层边界的 Spring Boot 微服务。
 
 ## 技术栈
 
 - Java 17 + Spring Boot 3.3
-- COLA 5.0 DDD 分层架构（adapter → app → domain ← infrastructure）
+- COLA 理念的 DDD 分层架构（adapter → app → domain ← infrastructure）
 - MySQL 8.4 + MyBatis-Plus（`@AutoMybatis` 自动生成 Mapper）
 - MapStruct 对象转换
 - Nacos 服务注册 + OpenFeign/Dubbo 通信
@@ -28,12 +28,17 @@ cp start/src/main/resources/application-local.yml.example start/src/main/resourc
 ## 开发命令
 
 ```bash
-./mvnw clean verify                    # 构建与测试生命周期
-./mvnw spring-boot:run -pl start -am   # 启动服务
-./mvnw -Pdev clean verify              # 指定 profile
+./mvnw -B -ntp test                         # 单元测试与架构测试，无需 Docker
+./mvnw -B -ntp verify                       # 单元测试与架构测试，无需 Docker
+./mvnw -B -ntp -Pprecheck clean verify      # 本地全量质量预检，无需 Docker
+./mvnw -B -ntp -Pci clean verify            # CI 门禁：全量预检并启用 Enforcer，无需 Docker
+./mvnw -B -ntp spring-boot:run -pl start -am # 启动服务
+./mvnw -B -ntp spotless:apply               # 显式格式化源码
 ```
 
 环境、命令的实际验证范围和交付纪律见[开发指南](docs/engineering/development.md)。
+
+运行日志使用 Mimir 控制台文本预设；默认激活 local，仅 local/dev 且未混入 test/prod 时开启开发 CORS，默认来源为 `http://localhost:5173`。切换端口或主机需配置明确来源；实际使用方式与追踪边界见[运行时配置](docs/engineering/development.md#运行时配置)。
 
 ## 模块结构
 
